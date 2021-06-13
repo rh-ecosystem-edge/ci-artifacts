@@ -13,6 +13,11 @@ Toolbox
 Retro-compatibility breaks
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+- Changes to ``toolbox/entitlement/deploy.sh`` to allow deploying yum client auth credentials machine configs instead of entitlement machineconfigs
+
+  - ``toolbox/entitlement/deploy.sh --pem /path/to/key.pem`` will now require an equals sign, e.g. ``toolbox/entitlement/deploy.sh --pem=/path/to/key.pem``
+  - Added new flag ``toolbox/entitlement/deploy.sh --yum-client-auth=/path/to/credentials.pem`` to allow deploying PEM credentials as machineconfigs
+
 ...
 
 Other changes

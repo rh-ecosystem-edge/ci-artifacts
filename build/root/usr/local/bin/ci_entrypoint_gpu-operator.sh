@@ -4,6 +4,8 @@ set -o pipefail
 set -o errexit
 set -o nounset
 
+THIS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
 prepare_cluster_for_gpu_operator() {
     trap collect_must_gather ERR
 
@@ -85,6 +87,70 @@ test_commit() {
     validate_gpu_operator_deployment
 }
 
+test_upgrade_commit() {
+    test_commit $@
+
+    ./run_toolbox.py gpu_operator build_all_operands_canaries
+
+    oc get clusterpolicies.nvidia.com gpu-cluster-policy -ojson | jq \
+        -L$THIS_DIR/gpu-operator \
+        --slurpfile env_canaries $THIS_DIR/gpu-operator/upgrade_env_canaries.json \
+        --slurpfile image_canaries $THIS_DIR/gpu-operator/upgrade_image_canaries.json \
+        'import "meld" as meld; meld::meld($env_canaries[0]; . * $image_canaries[0])' | oc apply -f -
+
+    retries=120
+    retries_left=120
+    sleep_duration=5
+    until [[ "$retries_left" == 0 ]]; do
+        echo "Checking if all operands upgraded successfully..."
+        for tup in \
+            "gpu-feature-discovery gpu-feature-discovery" \
+            "nvidia-container-toolkit-daemonset nvidia-container-toolkit-ctr" \
+            "nvidia-dcgm nvidia-dcgm-ctr" \
+            "nvidia-dcgm-exporter nvidia-dcgm-exporter" \
+            "nvidia-device-plugin-daemonset nvidia-device-plugin-ctr" \
+            "nvidia-driver-daemonset nvidia-driver-ctr" \
+            "nvidia-node-status-exporter nvidia-node-status-exporter" \
+            "nvidia-operator-validator nvidia-operator-validator" \
+            ; do
+            set -- $tup
+            app_name=$1 
+            container_name=$2 
+            namespace="gpu-operator-resources"
+            canary_path="/upgrade_canary"
+
+            for pod in $(oc get pods -n $namespace -ojson "-lapp=${app_name}" | jq '.items[].metadata.name' -r); do
+                echo "Testing for the existence of the upgrade CI_UPGRADE_CANARY env variable in $pod"
+                if ! oc exec -n $namespace -c $container_name ${pod} -- env | grep -q 'CI_UPGRADE_CANARY=UPGRADED'; then
+                    retries_left=$((retries_left-1))
+                    echo "Failed upgrade verification #$((retries - retries_left)), retrying in $sleep_duration seconds..."
+                    sleep $sleep_duration
+                    continue 3
+                fi
+
+                echo "Testing for the existence of $canary_path in pod $pod"
+                if ! oc exec -n $namespace -c $container_name ${pod} -- ls $canary_path > /dev/null; then
+                    retries_left=$((retries_left-1))
+                    echo "Failed upgrade verification #$((retries - retries_left)), retrying in $sleep_duration seconds..."
+                    sleep $sleep_duration
+                    continue 3
+                fi
+            done
+        done
+
+        break 
+    done
+
+    if [[ $retries_left == 0 ]]; then
+        echo "Operands failed to update after $retries retries"
+        exit 1
+    fi
+
+    echo "Upgrade verified successfully, all canaries found"
+
+    validate_gpu_operator_deployment
+}
+
 test_operatorhub() {
     if [ "${1:-}" ]; then
         OPERATOR_VERSION="--version=$1"
@@ -127,6 +193,10 @@ shift
 set -x
 
 case ${action} in
+    "test_upgrade_commit")
+        test_upgrade_commit "https://github.com/NVIDIA/gpu-operator.git" master
+        exit 0
+        ;;
     "test_master_branch")
         ## currently broken
         #test_master_branch "$@"

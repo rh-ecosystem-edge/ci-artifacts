@@ -25,5 +25,5 @@ spec:
     dockerStrategy:
       buildArgs:
         - name: OPERAND_IMAGE
-          value: "{{ dcgm_exporter_operand_repo.stdout }}/{{ build_operand_imagestream_name }}{% if dcgm_exporter_operand_tag.stdout.startswith('sha256') %}@{% else %}:{% endif %}{{ dcgm_exporter_operand_tag.stdout }}"
+          value: "{{ dcgm_exporter_operand_repo.stdout }}/{{ build_operand_canary_imagestream_name }}{% if dcgm_exporter_operand_tag.stdout.startswith('sha256') %}@{% else %}:{% endif %}{{ dcgm_exporter_operand_tag.stdout }}"
       dockerfilePath: Containerfile

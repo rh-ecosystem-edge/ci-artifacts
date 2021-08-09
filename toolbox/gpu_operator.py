@@ -229,15 +229,15 @@ class GPUOperator:
             print(f"Couldn't find {buildconfig_path}")
             sys.exit(1)
 
-        build_operand_imagestream_name, image_tag = buildconfig["spec"]["output"]["to"]["name"].split(":")
+        build_operand_canary_imagestream_name, image_tag = buildconfig["spec"]["output"]["to"]["name"].split(":")
 
         return PlaybookRun(
                 "build-canary",
                 opts={
                     "operand_buildconfig": buildconfig_path.absolute(),
-                    "build_operand_tag": image_tag,
-                    "build_operand_namespace": buildconfig["metadata"]["namespace"],
-                    "build_operand_imagestream_name": build_operand_imagestream_name,
+                    "build_operand_canary_tag": image_tag,
+                    "build_operand_canary_namespace": buildconfig["metadata"]["namespace"],
+                    "build_operand_canary_imagestream_name": build_operand_canary_imagestream_name,
                 },
             )
 

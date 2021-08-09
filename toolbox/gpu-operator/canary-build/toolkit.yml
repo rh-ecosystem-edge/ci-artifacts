@@ -25,5 +25,5 @@ spec:
     dockerStrategy:
       buildArgs:
         - name: OPERAND_IMAGE
-          value: "{{ container_toolkit_operand_repo.stdout }}/{{ build_operand_imagestream_name }}{% if container_toolkit_operand_tag.stdout.startswith('sha256') %}@{% else %}:{% endif %}{{ container_toolkit_operand_tag.stdout }}"
+          value: "{{ container_toolkit_operand_repo.stdout }}/{{ build_operand_canary_imagestream_name }}{% if container_toolkit_operand_tag.stdout.startswith('sha256') %}@{% else %}:{% endif %}{{ container_toolkit_operand_tag.stdout }}"
       dockerfilePath: Containerfile

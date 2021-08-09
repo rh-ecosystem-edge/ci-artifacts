@@ -1,34 +1,34 @@
 ---
 - name: Make sure imagestream name is set
-  when: not build_operand_imagestream_name
-  fail: msg="Failed because build_operand_imagestream_name has to be set"
+  when: not build_operand_canary_imagestream_name
+  fail: msg="Failed because build_operand_canary_imagestream_name has to be set"
 
-- name: Make sure build_operand_tag is set
-  when: not build_operand_tag
-  fail: msg="Failed because build_operand_tag has to be set"
+- name: Make sure build_operand_canary_tag is set
+  when: not build_operand_canary_tag
+  fail: msg="Failed because build_operand_canary_tag has to be set"
 
 - name: Create the namespace manifest
   template:
-    src: "{{ build_operand_namespace_deployment }}"
-    dest: "{{ artifact_extra_logs_dir }}/{{ build_operand_imagestream_name }}_namespace.yml"
+    src: "{{ build_operand_canary_namespace_deployment }}"
+    dest: "{{ artifact_extra_logs_dir }}/{{ build_operand_canary_imagestream_name }}_namespace.yml"
 
 - name: Apply the namespace manifest
   command:
-    oc apply -f "{{ artifact_extra_logs_dir }}/{{ build_operand_imagestream_name }}_namespace.yml"
+    oc apply -f "{{ artifact_extra_logs_dir }}/{{ build_operand_canary_imagestream_name }}_namespace.yml"
 
 - name: Create the imagestream manifest
   template:
-    src: "{{ build_operand_imagestream }}"
-    dest: "{{ artifact_extra_logs_dir }}/{{ build_operand_imagestream_name }}_imagestream.yml"
+    src: "{{ build_operand_canary_imagestream }}"
+    dest: "{{ artifact_extra_logs_dir }}/{{ build_operand_canary_imagestream_name }}_imagestream.yml"
 
 - name: Apply the namespace manifest
   command:
-    oc apply -f "{{ artifact_extra_logs_dir }}/{{ build_operand_imagestream_name }}_imagestream.yml"
+    oc apply -f "{{ artifact_extra_logs_dir }}/{{ build_operand_canary_imagestream_name }}_imagestream.yml"
 
 - name: Search if the CI image exists
   command: oc get imagestreamtag \
-              -n "{{ build_operand_namespace }}" \
-              "{{ build_operand_imagestream_name }}:{{ build_operand_tag }}" \
+              -n "{{ build_operand_canary_namespace }}" \
+              "{{ build_operand_canary_imagestream_name }}:{{ build_operand_canary_tag }}" \
               -oname --ignore-not-found
   register: has_ci_image
 
@@ -125,16 +125,16 @@
   - name: Render buildconfig template
     template:
       src: "{{ operand_buildconfig }}"
-      dest: "{{ artifact_extra_logs_dir }}/{{ build_operand_imagestream_name }}_buildconfig.yml"
+      dest: "{{ artifact_extra_logs_dir }}/{{ build_operand_canary_imagestream_name }}_buildconfig.yml"
 
   - name: Delete any old image builder manifest
-    command: oc delete -f "{{ artifact_extra_logs_dir }}/{{ build_operand_imagestream_name }}_buildconfig.yml" --ignore-not-found
+    command: oc delete -f "{{ artifact_extra_logs_dir }}/{{ build_operand_canary_imagestream_name }}_buildconfig.yml" --ignore-not-found
 
   - name: Apply the buildconfig manifest
-    command: oc apply -f "{{ artifact_extra_logs_dir }}/{{ build_operand_imagestream_name }}_buildconfig.yml"
+    command: oc apply -f "{{ artifact_extra_logs_dir }}/{{ build_operand_canary_imagestream_name }}_buildconfig.yml"
 
   - name: Wait for the image to be built
-    shell: oc logs -f "buildconfig/{{ build_operand_imagestream_name }}" -n "{{ build_operand_namespace }}" > /dev/null
+    shell: oc logs -f "buildconfig/{{ build_operand_canary_imagestream_name }}" -n "{{ build_operand_canary_namespace }}" > /dev/null
 
 - name: Ensure that the image exists
-  command: oc get imagestreamtag -n "{{ build_operand_namespace }}" "{{ build_operand_imagestream_name }}:{{ build_operand_tag }}" -oname
+  command: oc get imagestreamtag -n "{{ build_operand_canary_namespace }}" "{{ build_operand_canary_imagestream_name }}:{{ build_operand_canary_tag }}" -oname

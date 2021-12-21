@@ -1,0 +1,118 @@
+---
+- name: Fail if ocm_refresh_token is undefined
+  fail: msg="Bailing out. This play requires ocm_refresh_token"
+  when: ocm_refresh_token is undefined
+
+- name: Fail if ocm_addon_id is undefined
+  fail: msg="Bailing out. This play requires 'ocm_addon_id'"
+  when: ocm_addon_id is undefined
+
+- name: Fail if ocm_url is undefined
+  fail: msg="Bailing out. This play requires 'ocm_url'"
+  when: ocm_url is undefined
+
+- name: Fail if ocm_cluster_id is undefined
+  fail: msg="Bailing out. This play requires 'ocm_cluster_id'"
+  when: ocm_cluster_id is undefined
+
+- name: Debug cluster and url (env)
+  debug:
+    msg: "ocm_cluster_id: {{ ocm_cluster_id  }}, ocm_url: {{ ocm_url }}"
+
+- name: ocm addon id
+  debug:
+    msg: "ocm addon id to install: {{ ocm_addon_id  }}"
+
+- name: Check if ocm is available
+  command: ocm version
+  register: ocm_version
+  changed_when: false
+  failed_when: false
+
+- name: Fail if ocm is not available
+  fail: msg="ocm version command returned with a non 0 code"
+  when: ocm_version.rc|int != 0
+
+- name: Login to ocm
+  command: "ocm login --token={{ ocm_refresh_token }} --url={{ ocm_url }}"
+  no_log: true
+  register: ocm_login_cmd
+  changed_when: false
+
+- name: Check ocm whoami
+  command: ocm whoami
+  register: ocm_whoami
+  changed_when: false
+  failed_when: false
+
+- name: Fail if ocm is not logged in
+  fail: msg="ocm whoami failed with return code {{ ocm_whoami.rc  }}"
+  when: ocm_whoami.rc|int != 0
+
+- name: ocm whoami
+  debug:
+    msg: "ocm whoami: {{ ocm_whoami.stdout  }}"
+  changed_when: false
+  failed_when: false
+
+- name: Check if addon is already installed
+  shell: 
+    cmd: "ocm get /api/clusters_mgmt/v1/clusters/{{ ocm_cluster_id }}/addons/{{ ocm_addon_id  }} 2>&1 | jq -r '.kind'"
+  register: ocm_addon_precheck
+  failed_when: false
+  changed_when: false
+
+- name: Set addon current state
+  set_fact:
+    addon_install_needed: "{{ ocm_addon_precheck.stdout == 'Error' }}"
+  changed_when: false
+
+- name: Install needed
+  debug: 
+    msg: "Install needed: {{ addon_install_needed  }}"
+
+- name: Create ocm addon install payload
+  template:
+    src: roles/ocm_install_addon/files/ocm_addon_template.json.j2
+    dest: /tmp/addon_{{ ocm_addon_id  }}.json
+    mode: '0777'
+  changed_when: false
+  when: addon_install_needed
+
+- name: "Install addon {{ ocm_addon_id  }} via ocm"
+  shell: 
+    cmd: "ocm post /api/clusters_mgmt/v1/clusters/{{ ocm_cluster_id  }}/addons --body=/tmp/addon_{{ ocm_addon_id  }}.json 2>&1 | jq -r '.kind'"
+  register: addon_install_command
+  failed_when: false
+  when: addon_install_needed
+
+- name: Fail if response kind is not AddOnInstallation
+  fail: 
+    msg: "response kind: {{ addon_install_command.stdout }}"
+  when: 
+    - addon_install_command is defined
+    - addon_install_command.stdout is defined
+    - addon_install_command.stdout != 'AddOnInstallation'
+
+- name: Debug wait_for_ready_state
+  debug: msg="Wait for ready state={{ wait_for_ready_state }}"
+
+- name: Poll addon state until reached desired state
+  shell:
+    cmd: "ocm get /api/clusters_mgmt/v1/clusters/{{ ocm_cluster_id }}/addons/{{ ocm_addon_id  }} 2>&1 | jq -r '.state'"
+  register: addon_state_result
+  changed_when: false
+  retries: 6
+  delay: 600
+  until: | 
+    (addon_state_result.stdout == 'deleting') or 
+    (addon_state_result.stdout == 'failed') or
+    (addon_state_result.stdout == 'installing' and not wait_for_ready_state) or
+    (addon_state_result.stdout == 'ready')
+  failed_when: |
+    (addon_state_result.stdout == 'deleting') or
+    (addon_state_result.stdout == 'failed') or
+    (wait_for_ready_state and addon_state_result.stdout != 'ready')
+
+- name: Polling end debug info
+  debug: msg="AddinId={{ ocm_addon_id }}, Wait for ready state={{ wait_for_ready_state }}, Current addon state={{ addon_state_result.stdout }}"

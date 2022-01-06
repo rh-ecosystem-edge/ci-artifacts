@@ -7,7 +7,7 @@ set -o nounset
 
 THIS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
-PSAP_SECRET_PATH=/var/run/psap-entitlement-secret
+NVIDIA_CI_SECRET_PATH=/var/run/nvidia-ci-secrets
 
 source $THIS_DIR/../prow/gpu-operator.sh source
 
@@ -29,7 +29,7 @@ fi
 DL_OPT=""
 if [[ "$@" == *use_mirror* ]]; then
    DL_OPT="${DL_OPT} --mirror_base_url=https://mirror-dataset.apps.ci-mirror.psap.aws.rhperfscale.org/coco"
-   DL_OPT="${DL_OPT} --client-cert=${PSAP_SECRET_PATH}/entitled-mirror-client-creds.pem"
+   DL_OPT="${DL_OPT} --client-cert=${NVIDIA_CI_SECRET_PATH}/entitled-mirror-client-creds.pem"
 fi
 
 RUN_CNT=1

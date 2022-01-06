@@ -1,11 +1,11 @@
 FROM registry.access.redhat.com/ubi8/ubi
 
-MAINTAINER OpenShift PSAP Team <openshift-psap@redhat.com>
+MAINTAINER Red Hat Edge Ecosystem Team <assisted-installer@redhat.com>
 
-LABEL 	io.k8s.display-name="OpenShift PSAP CI artifacts" \
-      	io.k8s.description="An image for running Ansible artifacts for OpenShift PSAP CI" \
+LABEL 	io.k8s.display-name="Red Hat Edge Ecosystem CI artifacts" \
+      	io.k8s.description="An image for running Ansible artifacts for RedHat Edge Ecosystem CI" \
  	name="ci-artifacts" \
-	url="https://github.com/openshift-psap/ci-artifacts"
+	url="https://github.com/rh-ecosystem-edge/ci-artifacts"
 
 COPY requirements.txt /
 
@@ -50,8 +50,8 @@ RUN sed -i 's|roles/|/opt/ci-artifacts/roles/|' /etc/ansible/ansible.cfg \
  && sed -i 's|callback_plugins = ../|callback_plugins = /opt/ci-artifacts/src/|' /etc/ansible/ansible.cfg
 
 # Set up the runner user
-ENV USER_NAME=psap-ci-runner \
-    USER=psap-ci-runner \
+ENV USER_NAME=edge-ci-runner \
+    USER=edge-ci-runner \
     HOME=/opt/ci-artifacts/src/ \
     ANSIBLE_CONFIG="/etc/ansible/ansible.cfg" \
     INSIDE_CI_IMAGE="y"

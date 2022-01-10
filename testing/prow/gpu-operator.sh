@@ -286,8 +286,8 @@ deploy_commit() {
         return 1
     fi
 
-    GPU_OPERATOR_QUAY_BUNDLE_PUSH_SECRET=${GPU_OPERATOR_QUAY_BUNDLE_PUSH_SECRET:-"/var/run/psap-entitlement-secret/openshift-psap-openshift-ci-secret.yml"}
-    GPU_OPERATOR_QUAY_BUNDLE_IMAGE_NAME=${GPU_OPERATOR_QUAY_BUNDLE_IMAGE_NAME:-"quay.io/openshift-psap/ci-artifacts"}
+    GPU_OPERATOR_QUAY_BUNDLE_PUSH_SECRET=${GPU_OPERATOR_QUAY_BUNDLE_PUSH_SECRET:-"/var/run/nvidia-ci-secrets/openshift-psap-openshift-ci-secret.yml"}
+    GPU_OPERATOR_QUAY_BUNDLE_IMAGE_NAME=${GPU_OPERATOR_QUAY_BUNDLE_IMAGE_NAME:-"quay.io/edge-infrastructure/ci-artifacts"}
 
     ./run_toolbox.py gpu_operator bundle_from_commit "${gpu_operator_git_repo}" \
                                              "${gpu_operator_git_ref}" \

@@ -42,7 +42,7 @@ fi
 # mark the failure of "entitlement test_cluster" ^^^ as expected
 _expected_fail "Checking if the cluster was entitled"
 
-ENTITLEMENT_SECRET_PATH=/var/run/psap-entitlement-secret
+ENTITLEMENT_SECRET_PATH=/var/run/nvidia-ci-secrets
 ENTITLEMENT_VERSION=${ENTITLEMENT_SECRET_PATH}/version
 
 ENTITLEMENT_PEM=${ENTITLEMENT_PEM:-${ENTITLEMENT_SECRET_PATH}/entitlement.pem}

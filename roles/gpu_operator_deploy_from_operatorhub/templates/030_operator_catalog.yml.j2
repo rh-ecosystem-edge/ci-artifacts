@@ -1,0 +1,14 @@
+kind: CatalogSource
+apiVersion: operators.coreos.com/v1alpha1
+metadata:
+  name: certified-operators-previous
+  namespace: openshift-marketplace
+spec:
+  displayName: Certified Operators Previous
+  image: "registry.redhat.io/redhat/certified-operator-index:{{ gpu_operator_catalog_version }}"
+  priority: -300
+  publisher: Red Hat
+  sourceType: grpc
+  updateStrategy:
+    registryPoll:
+      interval: 10m0s

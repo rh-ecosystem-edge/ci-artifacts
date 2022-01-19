@@ -7,6 +7,25 @@
          '-ojsonpath={.status.connectionState.lastObservedState}{"\n"}'
     failed_when: false
 
+### THIS STUFF HERE SHOULD HAPPEN ONLY FOR OCP 4.10 BEFORE IT'S GA
+  - name: Set previous OCP version for the CatalogSource
+    set_fact:
+      gpu_operator_catalog_version: v4.9
+
+  - name: Template CatalogSource for previous OCP release
+    template:
+      src: "{{ gpu_operator_catalog_previous }}"
+      dest: "{{ artifact_extra_logs_dir }}/gpu_operator_catalog.yml"
+      mode: 0400
+
+  - name: Apply CatalogSource for previous OCP release
+    command: oc apply -f "{{ artifact_extra_logs_dir }}/gpu_operator_catalog.yml"
+
+  - name: Set CatalogSource to be used in Subscription
+    set_fact:
+      gpu_operator_subscription_source: certified-operators-previous
+### END
+
   - name: Wait for the GPU Operator package manifest to be available
     command:
       oc get packagemanifests/gpu-operator-certified -n openshift-marketplace

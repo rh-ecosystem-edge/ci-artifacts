@@ -1,0 +1,18 @@
+---
+- name: Set previous OCP version for the CatalogSource
+  set_fact:
+    gpu_operator_catalog_version: "v{{ openshift_release_major }}.{{ openshift_release_minor|int - 1 }}"
+
+- name: Catalog source version
+  debug:
+    msg: "Current OCP version: {{ openshift_release }}, Setting catalog tag {{ gpu_operator_catalog_version }}"
+
+- name: Template CatalogSource for previous OCP release
+  template:
+    src: "{{ gpu_operator_catalog_previous }}"
+    dest: "{{ artifact_extra_logs_dir }}/gpu_operator_catalog.yml"
+    mode: 0400
+
+- name: Apply CatalogSource for previous OCP release
+  command: oc apply -f "{{ artifact_extra_logs_dir }}/gpu_operator_catalog.yml"
+  changed_when: true

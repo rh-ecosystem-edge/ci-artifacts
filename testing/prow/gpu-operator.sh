@@ -401,12 +401,17 @@ test_operatorhub() {
     fi
     shift || true
 
+    OPERATOR_CATALOG="$([ -z "${USE_PREV_RELEASE_CATALOG:-}" ] || echo '--catalog certified-operators-previous')"
+
+    [ -z "$OPERATOR_CATALOG" ] || ./run_toolbox.py gpu_operator deploy_prev_catalog_source
+
     prepare_cluster_for_gpu_operator "$@"
 
     ./run_toolbox.py gpu_operator deploy_from_operatorhub \
                      ${OPERATOR_CHANNEL:-} \
                      ${OPERATOR_VERSION:-} \
-                     --namespace ${OPERATOR_NAMESPACE}
+                     --namespace ${OPERATOR_NAMESPACE} \
+                     $(echo $OPERATOR_CATALOG | xargs)
 
     validate_gpu_operator_deployment
 }

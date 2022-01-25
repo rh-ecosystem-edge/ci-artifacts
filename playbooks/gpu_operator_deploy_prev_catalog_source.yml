@@ -1,0 +1,7 @@
+---
+- name: Deploy an Operatorhub soure catalog (Useful for OCP next tests)
+  hosts: localhost
+  connection: local
+  gather_facts: true
+  roles:
+    - role: gpu_operator_deploy_prev_catalog_source

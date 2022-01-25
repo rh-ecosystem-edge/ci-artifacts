@@ -21,6 +21,14 @@ class GPUOperator:
         )
 
     @staticmethod
+    def deploy_prev_catalog_source():
+        """
+        Deploys operator source catalog of previous OCP release and name it 'certified-operators-previous'. If running in OCP 4.9 will deploy catalog from 4.8.
+        """
+        print("Deploying CatalogSource from previous OCP version")
+        return PlaybookRun("gpu_operator_deploy_prev_catalog_source", {})
+
+    @staticmethod
     def deploy_from_bundle(bundle, namespace="nvidia-gpu-operator"):
         """
         Deploys the GPU Operator from a bundle
@@ -40,7 +48,7 @@ class GPUOperator:
         return PlaybookRun("gpu_operator_deploy_from_operatorhub", opts)
 
     @staticmethod
-    def deploy_from_operatorhub(namespace="nvidia-gpu-operator", version=None, channel=None, installPlan="Manual"):
+    def deploy_from_operatorhub(namespace="nvidia-gpu-operator", version=None, channel=None, installPlan="Manual", catalog="certified-operators"):
         """
         Deploys the GPU operator from OperatorHub
 
@@ -49,11 +57,22 @@ class GPUOperator:
             channel: Optional channel to deploy from. If unspecified, deploys the CSV's default channel.
             version: Optional version to deploy. If unspecified, deploys the latest version available in the selected channel. Run the toolbox gpu_operator list_version_from_operator_hub subcommand to see the available versions.
             installPlan: Optional InstallPlan approval mode (Automatic or Manual [default])
+            catalog: Optional Name of the catalog of witch to install the operator from. Default: certified-operators.
         """
-        opts = {"gpu_operator_target_namespace": namespace}
+
+        opts = {
+            "cluster_deploy_operator_catalog": catalog,
+            "cluster_deploy_operator_manifest_name": "gpu-operator-certified",
+
+            "cluster_deploy_operator_namespace": namespace,
+            "cluster_deploy_operator_all_namespaces": namespace == "openshift-operators",
+
+            "cluster_deploy_operator_deploy_cr": True,
+            "cluster_deploy_operator_namespace_monitoring": True,
+        }
 
         if channel is not None:
-            opts["gpu_operator_operatorhub_channel"] = channel
+            opts["cluster_deploy_operator_channel"] = channel
             print(
                 f"Deploying the GPU Operator from OperatorHub using channel '{channel}'."
             )
@@ -63,12 +82,12 @@ class GPUOperator:
                 print("Version may only be specified if --channel is specified")
                 sys.exit(1)
 
-            opts["gpu_operator_operatorhub_version"] = version
+            opts["cluster_deploy_operator_version"] = version
             print(
                 f"Deploying the GPU Operator from OperatorHub using version '{version}'."
             )
 
-        opts["gpu_operator_installplan_approval"] = installPlan
+        opts["cluster_deploy_operator_installplan_approval"] = installPlan
         if installPlan not in ("Manual", "Automatic"):
             print(
                 f"InstallPlan can only be Manual or Automatic. Received '{installPlan}'."
@@ -80,7 +99,7 @@ class GPUOperator:
         )
 
         print("Deploying the GPU Operator from OperatorHub.")
-        return PlaybookRun("gpu_operator_deploy_from_operatorhub", opts)
+        return PlaybookRun("cluster_deploy_operator", opts)
 
     @staticmethod
     def run_gpu_burn(runtime=None):

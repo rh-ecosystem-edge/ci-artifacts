@@ -42,7 +42,7 @@
 - name: Store openshift major and minor version
   set_fact:
     openshift_release_major: "{{ ocp_major_minor_version.stdout[0] }}"
-    openshift_release_minor: "{{ ocp_major_minor_version.stdout[2] }}"
+    openshift_release_minor: "{{ ocp_major_minor_version.stdout[2:] }}"
 
 - name: 'Store openshift_release={{ ocp_version.stdout }}'
   set_fact:

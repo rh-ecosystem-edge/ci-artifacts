@@ -406,9 +406,14 @@ test_operatorhub() {
     fi
     shift || true
 
-    OPERATOR_CATALOG="$([ -z "${USE_PREV_RELEASE_CATALOG:-}" ] || echo '--catalog certified-operators-previous')"
-
-    [ -z "$OPERATOR_CATALOG" ] || ./run_toolbox.py gpu_operator deploy_prev_catalog_source
+    if [ "${USE_PREV_RELEASE_CATALOG:-}" ]; then
+        # Deploy OCP version N-1 catalog - Usually needed for testing on OCP next.
+        _warning "GPU_Operator_deployed_from_previous" "The GPU Operator was deployed from the version N-1 of the catalog (USE_PREV_RELEASE_CATALOG variable was set)"
+        ./run_toolbox.py gpu_operator deploy_prev_catalog_source
+        OPERATOR_CATALOG="--catalog certified-operators-previous"
+    else
+        OPERATOR_CATALOG="" # deploy from the default catalog
+    fi
 
     prepare_cluster_for_gpu_operator "$@"
 

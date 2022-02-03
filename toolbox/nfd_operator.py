@@ -26,15 +26,16 @@ class NFDOperator:
         return PlaybookRun("nfd_operator_deploy_custom_commit", opts)
 
     @staticmethod
-    def deploy_from_operatorhub(channel=None):
+    def deploy_from_operatorhub(channel=None, catalog="redhat-operators"):
         """
         Deploys the GPU Operator from OperatorHub
 
         Args:
-            The operator hub channel to deploy. e.g. 4.7
+            channel: The operator hub channel to deploy. e.g. 4.7. Default:None
+            catalog: Optional Name of the catalog of witch to install the operator from. Default: certified-operators.
         """
         opts = {
-            "cluster_deploy_operator_catalog": "redhat-operators",
+            "cluster_deploy_operator_catalog": catalog,
             "cluster_deploy_operator_manifest_name": "nfd",
             "cluster_deploy_operator_namespace": "openshift-nfd",
             "cluster_deploy_operator_deploy_cr": True,

@@ -1,0 +1,55 @@
+---
+- name: Fail if catalog_image is undefined
+  fail:
+    msg: Must provide a catalog_image
+  when: catalog_image is undefined
+
+- name: Fail if catalog_registry is undefined
+  fail:
+    msg: Must provide a catalog_registry
+  when: catalog_registry is undefined
+
+- name: Set default catalog_version (N-1) if undefined
+  set_fact:
+    catalog_version: "v{{ openshift_release_major }}.{{ openshift_release_minor|int - 1 }}"
+  when: catalog_version is undefined
+
+- name: Set catalog_name
+  set_fact:
+    catalog_name: "{{ catalog_image }}-cs"
+
+
+- name: 'Deploy {{ catalog_image }}:{{ catalog_version }} CatalogSource'
+  block:
+  - name: Catalog source version
+    debug:
+      msg: "Current OCP version: {{ openshift_release }}, Setting catalog tag {{ catalog_version }}"
+  
+  - name: Create CatalogSource manifest from template
+    template:
+      src: "{{ operator_catalog_template }}"
+      dest: "{{ artifact_extra_logs_dir }}/{{ catalog_image }}-catalog-previous.yml"
+      mode: 0400
+  
+  - name: Apply CatalogSource
+    command: oc apply -f "{{ artifact_extra_logs_dir }}/{{ catalog_image }}-catalog-previous.yml"
+
+  - name: Verify catalog pod is ready
+    shell: 
+      cmd: |
+        oc get pods -n openshift-marketplace -ojson \
+        | jq -r '.items[]|.metadata.name+" "+.status.phase|select(match("{{ catalog_name }}"))' \
+        | awk '{print $2}' | grep Running
+    retries: 25
+    delay: 30
+    register: catalog_pod_ready
+    until: catalog_pod_ready.rc == 0
+
+  - name: Verify Catalog source
+    shell:
+      cmd: oc get catalogsource -n openshift-marketplace -ojson | jq -r '.items[]|.metadata.name' | grep {{ catalog_name }}
+    retries: 25
+    delay: 30
+    register: catalog_source_cr_exists
+    until: catalog_source_cr_exists.rc == 0
+

@@ -153,3 +153,31 @@ class Cluster:
         print("Deploying the operator.")
 
         return PlaybookRun("cluster_deploy_operator", opts)
+
+    @staticmethod
+    def deploy_catalog_source(catalog_image, catalog_registry="registry.redhat.io/redhat/", catalog_version=None):
+        """
+        Deploy a catalog source. By default will instal previous version of a given catalog. Useful for testing operators on OCP next version.
+
+        Args:
+            catalog_image: Image of the catalog source. Required.
+            catalog_registry: Optional. The catalog image registry, Default=registry.redhat.io/redhat/
+            catalog_version: Optional. Version of the catalog source. Default=None, Will result in 'v{OCP Version - 1}' in the Playbook
+        """
+        if catalog_image is None:
+            print("catalog_image must be provided.")
+            sys.exit(1)
+
+        if not catalog_registry.endswith('/'):
+            catalog_registry = f"{catalog_registry}/"
+
+        opts = {
+            "catalog_image": catalog_image,
+            "catalog_registry": catalog_registry,
+        }
+
+        if catalog_version is not None:
+            opts["catalog_version"] = catalog_version
+
+        return PlaybookRun("cluster_deploy_catalog_source", opts)
+

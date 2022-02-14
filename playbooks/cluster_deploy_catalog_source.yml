@@ -1,0 +1,7 @@
+---
+- name: "Deploy an Operatorhub CatalogSource. Defaults to previous catalog version (Useful for OCP next tests)"
+  hosts: localhost
+  connection: local
+  gather_facts: true
+  roles:
+    - role: cluster_deploy_catalog_source

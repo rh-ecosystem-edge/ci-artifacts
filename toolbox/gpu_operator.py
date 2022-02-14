@@ -21,14 +21,6 @@ class GPUOperator:
         )
 
     @staticmethod
-    def deploy_prev_catalog_source():
-        """
-        Deploys operator source catalog of previous OCP release and name it 'certified-operators-previous'. If running in OCP 4.9 will deploy catalog from 4.8.
-        """
-        print("Deploying CatalogSource from previous OCP version")
-        return PlaybookRun("gpu_operator_deploy_prev_catalog_source", {})
-
-    @staticmethod
     def deploy_from_bundle(bundle, namespace="nvidia-gpu-operator"):
         """
         Deploys the GPU Operator from a bundle

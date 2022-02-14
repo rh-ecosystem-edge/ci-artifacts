@@ -196,6 +196,36 @@ cluster
         You can also use flags syntax for POSITIONAL ARGUMENTS
 
 
+``./run_toolbox.py cluster deploy_catalog_source``
+
+.. code-block:: text
+
+    NAME
+        run_toolbox.py cluster deploy_catalog_source - Deploy a catalog source. By default will instal previous version of a given catalog. Useful for testing operators on OCP next version.
+    
+    SYNOPSIS
+        run_toolbox.py cluster deploy_catalog_source CATALOG_IMAGE <flags>
+    
+    DESCRIPTION
+        Deploy a catalog source. By default will instal previous version of a given catalog. Useful for testing operators on OCP next version.
+    
+    POSITIONAL ARGUMENTS
+        CATALOG_IMAGE
+            Image of the catalog source. Required.
+    
+    FLAGS
+        --catalog_registry=CATALOG_REGISTRY
+            Default: 'registry.redhat.io/red...
+            Optional. The catalog image registry, Default=registry.redhat.io/redhat/
+        --catalog_version=CATALOG_VERSION
+            Type: Optional[]
+            Default: None
+            Optional. Version of the catalog source. Default=None, Will result in 'v{OCP Version - 1}' in the Playbook
+    
+    NOTES
+        You can also use flags syntax for POSITIONAL ARGUMENTS
+
+
 entitlement
 """""""""""
 ``./run_toolbox.py entitlement deploy``

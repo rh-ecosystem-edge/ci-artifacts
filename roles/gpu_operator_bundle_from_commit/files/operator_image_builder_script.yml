@@ -20,18 +20,21 @@ data:
 
     git show --quiet
 
+    IMAGE_NAME=$(echo $OPERATOR_IMAGE_NAME | sed 's/\(.*\):/\1 /' | awk '{print $1}')
+    IMAGE_TAG=$(echo $OPERATOR_IMAGE_NAME | sed 's/\(.*\):/\1 /' | awk '{print $2}')
+
     # if provided, use custom 'FROM ... as builder' image by setting BUILDER_IMAGE variable
     # avoid docker.io quotas by setting CUDA_IMAGE
     # The docker-image generates an image OUT_IMAGE (based on OPERATOR_IMAGE_NAME)
     make docker-image \
       VERSION=$(git rev-parse --short HEAD) \
       DOCKER=podman \
-      OUT_IMAGE=${OPERATOR_IMAGE_NAME} \
+      IMAGE_NAME=${IMAGE_NAME} \
+      IMAGE_TAG=${IMAGE_TAG} \
       CUDA_IMAGE=nvcr.io/nvidia/cuda \
       ${BUILDER_FROM_IMAGE:+BUILDER_IMAGE=${BUILDER_FROM_IMAGE}}
 
     # push the image locally
-
     (echo "{ \"auths\": " ; cat /var/run/secrets/openshift.io/push/.dockercfg ; echo "}") > /tmp/.dockercfg
     AUTH="--tls-verify=false --authfile /tmp/.dockercfg"
 

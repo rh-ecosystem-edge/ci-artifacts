@@ -33,10 +33,18 @@ function exit_and_abort() {
 
 function run_test() {
     TARGET=${1:-}
-    echo "====== Running toolbox '$TARGET'"
-    JUNIT_FILE_NAME=$(echo $TARGET | awk '{print "junit_"$1"_"$2".xml"}')
+    TARGET_SHORT=$(echo $TARGET | awk '{print $1"_"$2}')
+    echo "====== Running toolbox '$TARGET_SHORT'"
+    # Make sure a new junit is generated for this run
+    export FILE_POSTFIX=0
+    JUNIT_FILE_NAME=$(echo $TARGET | awk -v target=$TARGET_SHORT '{print "junit_"target}')
+    JUNIT_FILE="${JUNIT_DIR}/${JUNIT_FILE_NAME}_${FILE_POSTFIX}.xml"
+    while [ -f $JUNIT_FILE ]; do
+        FILE_POSTFIX=$((FILE_POSTFIX + 1))
+        JUNIT_FILE="${JUNIT_DIR}/${JUNIT_FILE_NAME}_${FILE_POSTFIX}.xml"
+    done
+    echo "====== JUnit report for '$TARGET_SHORT' -> ${JUNIT_FILE}"
     TARGET_NAME=$(echo $TARGET | sed 's/ /_/g')
-    JUNIT_FILE="${JUNIT_DIR}/${JUNIT_FILE_NAME}"
     RUNTIME_FILE="${JUNIT_DIR}/runtime"
     OUTPUT_FILE="${JUNIT_DIR}/output"
 
@@ -58,9 +66,9 @@ function trap_run_test() {
 }
 
 function must_gather() {
-    echo "===== Running must gather"
+    echo "====== Running must gather"
     collect_must_gather
-    echo "===== Done must gather"
+    echo "====== Done must gather"
 }
 
 function finalize_junit() {
@@ -112,6 +120,19 @@ echo "====== Starting OSDE2E tests..."
 
 echo "Using ARTIFACT_DIR=$ARTIFACT_DIR."
 echo "Using JUNIT_DIR=$JUNIT_DIR"
+CLUSTER_ID=$(oc get secrets ci-secrets -n osde2e-ci-secrets -o json | jq -r '.data|.["CLUSTER_ID"]' | base64 -d)
+echo "CLUSTER_ID=${CLUSTER_ID:-}"
+OCM_ENV=$(oc get secrets ci-secrets -n osde2e-ci-secrets -o json | jq -r '.data|.["ENV"]' | base64 -d)
+echo "OCM_ENV=${OCM_ENV:-}"
+
+OCM_REFRESH_TOKEN=$(oc get secrets ci-secrets -n osde2e-ci-secrets -o json | jq -r '.data|.["ocm-token-refresh"]' | base64 -d)
+echo "OCM_REFRESH_TOKEN=$(echo ${OCM_REFRESH_TOKEN} | cut -c1-6)...."
+
+echo "====== Installing RHODS"
+run_test "ocm_addon install --ocm_addon_id=managed-odh --ocm_refresh_token=${OCM_REFRESH_TOKEN} --ocm_url=${OCM_ENV} --ocm_cluster_id=${CLUSTER_ID} --wait_for_ready_state=True"
+
+echo "===== Installing GPU AddOn"
+run_test "ocm_addon install --ocm_addon_id=gpu-operator-certified-addon --ocm_refresh_token=${OCM_REFRESH_TOKEN} --ocm_url=${OCM_ENV} --ocm_cluster_id=${CLUSTER_ID}"
 
 echo "====== Waiting for gpu-operator..."
 run_test "gpu_operator wait_deployment"

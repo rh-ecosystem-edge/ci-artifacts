@@ -882,4 +882,37 @@ sro
     NOTES
         You can also use flags syntax for POSITIONAL ARGUMENTS
 
+ 
+OCM addons
+""""""""""
 
+``./run_toolbox.py ocm_addon install``
+
+.. code-block:: text
+
+    NAME
+        run_toolbox.py ocm_addon install - Installs an OCM addon
+    
+    SYNOPSIS
+        run_toolbox.py ocm_addon install OCM_REFRESH_TOKEN OCM_CLUSTER_ID OCM_URL OCM_ADDON_ID <flags>
+    
+    DESCRIPTION
+        Installs an OCM addon
+    
+    POSITIONAL ARGUMENTS
+        OCM_REFRESH_TOKEN
+            For OCM login auth
+        OCM_CLUSTER_ID
+            Cluster ID from OCM's POV
+        OCM_URL
+            Used to determine environment
+        OCM_ADDON_ID
+            the addon id to install. (such as `managed-odh`, `gpu-operator-certified-addon` etc.)
+    
+    FLAGS
+        --wait_for_ready_state=WAIT_FOR_READY_STATE
+            Default: False
+            Optional. If true will cause the role to wait until addon reports ready state. (Can time out)
+    
+    NOTES
+        You can also use flags syntax for POSITIONAL ARGUMENTS

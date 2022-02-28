@@ -1,0 +1,7 @@
+---
+- name: Install OCM addon
+  hosts: localhost
+  connection: local
+  gather_facts: true
+  roles:
+    - role: ocm_install_addon

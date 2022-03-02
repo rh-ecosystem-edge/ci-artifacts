@@ -10,8 +10,8 @@ JUNIT_DIR=/test-run-results
 BURN_RUNTIME_SEC=600
 
 JUNIT_HEADER_TEMPLATE='<?xml version="1.0" encoding="utf-8"?>
-<testsuite errors="NUM_ERRORS" failures="NUM_ERRORS" name="TEST_TARGET" tests="1" time="RUNTIME" timestamp="TIMESTAMP">
-    <testcase name="TEST_TARGET" time="RUNTIME">
+<testsuite errors="NUM_ERRORS" failures="NUM_ERRORS" name="TEST_TARGET_SHORT" tests="1" time="RUNTIME" timestamp="TIMESTAMP">
+    <testcase name="TEST_TARGET_SHORT" time="RUNTIME">
         <CASE_OUTPUT_TAG>
 '
 
@@ -25,7 +25,7 @@ THIS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 source $THIS_DIR/../prow/gpu-operator.sh source
 
 function exit_and_abort() {
-    echo "====== Failed. Aborting."
+    echo "====== Test failed. Aborting."
     must_gather
     tar_artifacts
     exit 1
@@ -77,8 +77,8 @@ function finalize_junit() {
     trap - EXIT
 
     cat $OUTPUT_FILE
-    echo
-    echo
+
+    echo "====== Finalizing JUnit report"
 
     # Replace '<' and '>' from output so it won't break the XML
     sed  -i 's/[<>]/\*\*/g' $OUTPUT_FILE
@@ -86,7 +86,7 @@ function finalize_junit() {
     RUNTIME="$(cat ${RUNTIME_FILE} | egrep -o '[0-9]+:[0-9]+\.[0-9]+elapsed' | sed 's/elapsed//')"
 
     sed -i "s/RUNTIME/${RUNTIME}/g" "${JUNIT_FILE}"
-    sed -i "s/TEST_TARGET/${TARGET_NAME}/g" "${JUNIT_FILE}"
+    sed -i "s/TEST_TARGET_SHORT/${TARGET_SHORT}/g" "${JUNIT_FILE}"
     sed -i "s/TIMESTAMP/$(date -Is)/g" "${JUNIT_FILE}"
 
     cat $OUTPUT_FILE >> $JUNIT_FILE

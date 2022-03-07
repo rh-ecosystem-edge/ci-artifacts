@@ -105,8 +105,6 @@
   retries: 6
   delay: 600
   until: | 
-    (addon_state_result.stdout == 'deleting') or 
-    (addon_state_result.stdout == 'failed') or
     (addon_state_result.stdout == 'installing' and not wait_for_ready_state) or
     (addon_state_result.stdout == 'ready')
   failed_when: |

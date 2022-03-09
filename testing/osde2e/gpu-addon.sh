@@ -82,7 +82,7 @@ function finalize_junit() {
     # Replace '<' and '>' from output so it won't break the XML
     sed  -i 's/[<>]/\*\*/g' $OUTPUT_FILE
     set -x
-    RUNTIME="$(cat ${RUNTIME_FILE} | egrep -o '[0-9]+:[0-9]+\.[0-9]+elapsed' | sed 's/elapsed//')"
+    RUNTIME="$(cat ${RUNTIME_FILE} | egrep -o '[0-9:.]+elapsed' | sed 's/elapsed//')"
 
     sed -i "s/RUNTIME/${RUNTIME}/g" "${JUNIT_FILE}"
     sed -i "s/TEST_TARGET_SHORT/${TARGET_SHORT}/g" "${JUNIT_FILE}"

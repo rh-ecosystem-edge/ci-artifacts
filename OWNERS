@@ -3,6 +3,7 @@ approvers:
   - kpouget
   - sagidayan
   - mkowalski
+  - mresvanis
 reviewers:
   - jmencak
   - sagidayan
@@ -10,3 +11,4 @@ reviewers:
   - osherdp
   - dagrayvid
   - kpouget
+  - mresvanis

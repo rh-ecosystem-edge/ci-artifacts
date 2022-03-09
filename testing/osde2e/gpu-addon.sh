@@ -44,7 +44,6 @@ function run_test() {
         JUNIT_FILE="${JUNIT_DIR}/${JUNIT_FILE_NAME}_${FILE_POSTFIX}.xml"
     done
     echo "====== JUnit report for '$TARGET_SHORT' -> ${JUNIT_FILE}"
-    TARGET_NAME=$(echo $TARGET | sed 's/ /_/g')
     RUNTIME_FILE="${JUNIT_DIR}/runtime"
     OUTPUT_FILE="${JUNIT_DIR}/output"
 
@@ -56,7 +55,7 @@ EOF
 
     /usr/bin/time -o ${RUNTIME_FILE} ./run_toolbox.py ${TARGET} > $OUTPUT_FILE
 
-    finalize_junit
+    trap_run_test
 }
 
 function trap_run_test() {
@@ -82,7 +81,7 @@ function finalize_junit() {
 
     # Replace '<' and '>' from output so it won't break the XML
     sed  -i 's/[<>]/\*\*/g' $OUTPUT_FILE
-
+    set -x
     RUNTIME="$(cat ${RUNTIME_FILE} | egrep -o '[0-9]+:[0-9]+\.[0-9]+elapsed' | sed 's/elapsed//')"
 
     sed -i "s/RUNTIME/${RUNTIME}/g" "${JUNIT_FILE}"
@@ -97,6 +96,7 @@ EOF
     rm -rf ${RUNTIME_FILE}
     rm -rf ${OUTPUT_FILE}
 
+    set +x
     if [[ $STATUS == 0 ]]; then
         sed -i 's/NUM_ERRORS/0/g' "${JUNIT_FILE}"
         sed -i 's/CASE_OUTPUT_TAG/system-out/g' "${JUNIT_FILE}"

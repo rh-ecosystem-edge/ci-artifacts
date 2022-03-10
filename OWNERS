@@ -1,8 +1,10 @@
 approvers:
   - sagidayan
   - mresvanis
+  - empovit
   - fabiendupont
 reviewers:
   - sagidayan
-  - fabiendupont
   - mresvanis
+  - empovit
+  - fabiendupont

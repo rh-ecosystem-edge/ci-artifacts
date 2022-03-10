@@ -1,16 +1,10 @@
 approvers:
-  - ArangoGutierrez
-  - kpouget
   - sagidayan
-  - mkowalski
   - mresvanis
   - empovit
+  - fabiendupont
 reviewers:
-  - jmencak
   - sagidayan
-  - ArangoGutierrez
-  - osherdp
-  - dagrayvid
-  - kpouget
   - mresvanis
   - empovit
+  - fabiendupont

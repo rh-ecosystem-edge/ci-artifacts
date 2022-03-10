@@ -1,14 +1,8 @@
 approvers:
-  - ArangoGutierrez
-  - kpouget
   - sagidayan
-  - mkowalski
   - mresvanis
+  - fabiendupont
 reviewers:
-  - jmencak
   - sagidayan
-  - ArangoGutierrez
-  - osherdp
-  - dagrayvid
-  - kpouget
+  - fabiendupont
   - mresvanis

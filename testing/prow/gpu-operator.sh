@@ -81,12 +81,12 @@ prepare_cluster_for_gpu_operator() {
 
     ${THIS_DIR}/entitle.sh
 
-    if [ "${USE_PREV_RELEASE_CATALOG:-}" ]; then
+    if [ "${NFD_USE_PREV_RELEASE_CATALOG:-}" ]; then
         if oc get packagemanifests/nfd -n openshift-marketplace > /dev/null; then
             _warning  "NFD_operator_pkg_manifest" "Requested to deploy the previous catalog, but the NFD Operator packagemanifest already exists"
         fi
         # Deploy OCP version N-1 catalog - Usually needed for testing on OCP next.
-        _warning "NFD_Operator_deployed_from_previous" "The NFD Operator was deployed from the version N-1 of the catalog (USE_PREV_RELEASE_CATALOG variable was set)"
+        _warning "NFD_Operator_deployed_from_previous" "The NFD Operator was deployed from the version N-1 of the catalog (NFD_USE_PREV_RELEASE_CATALOG variable was set)"
         ./run_toolbox.py cluster deploy_catalog_source redhat-operator-index
         NFD_OPERATOR_CATALOG="--catalog=redhat-operator-index-cs"
     else
@@ -349,12 +349,12 @@ prepare_cluster_for_gpu_operator_with_alerts() {
 
     mv ${ARTIFACT_DIR}/*__cluster__wait_for_alert* ${ARTIFACT_DIR}/alerts
 
-    if [ "${USE_PREV_RELEASE_CATALOG:-}" ]; then
+    if [ "${NFD_USE_PREV_RELEASE_CATALOG:-}" ]; then
         if oc get packagemanifests/nfd -n openshift-marketplace > /dev/null; then
             _warning  "NFD_operator_pkg_manifest" "Requested to deploy the previous catalog, but the NFD Operator packagemanifest already exists"
         fi
         # Deploy OCP version N-1 catalog - Usually needed for testing on OCP next.
-        _warning "NFD_Operator_deployed_from_previous" "The NFD Operator was deployed from the version N-1 of the catalog (USE_PREV_RELEASE_CATALOG variable was set)"
+        _warning "NFD_Operator_deployed_from_previous" "The NFD Operator was deployed from the version N-1 of the catalog (NFD_USE_PREV_RELEASE_CATALOG variable was set)"
         ./run_toolbox.py cluster deploy_catalog_source redhat-operator-index
         NFD_OPERATOR_CATALOG="--catalog=redhat-operator-index-cs"
     else
@@ -436,11 +436,11 @@ test_operatorhub() {
     fi
     shift || true
 
-    if [ "${USE_PREV_RELEASE_CATALOG:-}" ]; then
+    if [ "${GPU_USE_PREV_RELEASE_CATALOG:-}" ]; then
         if oc get packagemanifests/gpu-operator-certified -n openshift-marketplace > /dev/null; then
             _warning  "GPU_operator_pkg_manifest" "Requested to deploy the previous catalog, but the GPU Operator packagemanifest already exists"
         fi
-        _warning "GPU_Operator_deployed_from_previous" "The GPU Operator was deployed from the version N-1 of the catalog (USE_PREV_RELEASE_CATALOG variable was set)"
+        _warning "GPU_Operator_deployed_from_previous" "The GPU Operator was deployed from the version N-1 of the catalog (GPU_USE_PREV_RELEASE_CATALOG variable was set)"
         ./run_toolbox.py cluster deploy_catalog_source certified-operator-index
         GPU_OPERATOR_CATALOG="--catalog=certified-operator-index-cs"
     else

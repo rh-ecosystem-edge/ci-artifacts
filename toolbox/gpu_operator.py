@@ -129,7 +129,7 @@ class GPUOperator:
         Undeploys a GPU-operator that was deployed from a commit
         """
 
-        return PlaybookRun("gpu_operator_undeploy_custom_commit")
+        return PlaybookRun("gpu_operator_cleanup_bundle_from_commit")
 
     @staticmethod
     def undeploy_from_operatorhub():

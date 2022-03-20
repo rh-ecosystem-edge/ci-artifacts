@@ -79,8 +79,10 @@ function finalize_junit() {
 
     echo "====== Finalizing JUnit report"
 
-    # Replace '<' and '>' from output so it won't break the XML
+    # Replace '<' and '>' with '**' in output so it won't break the XML
     sed  -i 's/[<>]/\*\*/g' $OUTPUT_FILE
+    # Replace '&' with '@' output so it won't break the XML
+    sed  -i 's/[&]/@/g' $OUTPUT_FILE
     set -x
     RUNTIME="$(cat ${RUNTIME_FILE} | egrep -o '[0-9:.]+elapsed' | sed 's/elapsed//')"
 

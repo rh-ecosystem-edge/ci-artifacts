@@ -12,11 +12,8 @@ gpu_operator_target_namespace: nvidia-gpu-operator
 
 # Enable building the driver image (not empty to enable)
 gpu_operator_with_driver: ""
-#gpu_operator_driver_git_repo: "https://gitlab.com/nvidia/container-images/driver.git"
-#gpu_operator_driver_git_ref: "master"
-
-gpu_operator_driver_git_repo: "https://gitlab.com/kpouget_psap/nvidia-driver-container"
-gpu_operator_driver_git_ref: "ci"
+gpu_operator_driver_git_repo: "https://gitlab.com/nvidia/container-images/driver.git"
+gpu_operator_driver_git_ref: "master"
 
 # Enable building the validator image (not empty to enable)
 gpu_operator_with_validator: ""

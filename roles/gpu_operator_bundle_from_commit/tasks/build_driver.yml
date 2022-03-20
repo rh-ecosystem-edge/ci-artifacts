@@ -18,8 +18,8 @@
 - name: Get the version of the driver
   shell:
     set -o pipefail;
-    curl --silent  --fail --show-error \
-         "$(echo "{{ gpu_operator_git_repo }}" | sed 's/.git$//')/-/raw/{{ gpu_operator_git_ref }}/deployments/gpu-operator/values.yaml" \
+    curl --silent  --fail --show-error --location \
+         "$(echo "{{ gpu_operator_git_repo }}" | sed 's/.git$//')/raw/{{ gpu_operator_git_ref }}/deployments/gpu-operator/values.yaml" \
     | yq -r .driver.version
   register: driver_version_cmd
 

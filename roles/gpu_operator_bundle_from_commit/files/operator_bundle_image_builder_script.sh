@@ -63,7 +63,7 @@ get_image_sha() {
 
     SHA=$(podman inspect "$local_img" | jq -r .[].Digest)
 
-    echo "$(echo $local_img | cut -d: -f1)@${SHA}"
+    echo "$(echo $local_img | rev | cut -d: -f2- | rev)@${SHA}"
 }
 
 push_to_quay() {

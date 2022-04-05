@@ -418,19 +418,39 @@ prepare_cluster_for_gpu_operator_with_alerts() {
 
 test_operatorhub() {
     OPERATOR_NAMESPACE="nvidia-gpu-operator"
+    operator_version="${1:-}"
 
-    if [ "${1:-}" ]; then
-        OPERATOR_VERSION="--version=$1"
-        if [[ "$1" == "1.4"* || "$1" == "1.5"* || "$1" == "1.6"* ]]; then
+    if [[ "$operator_version" == "latest" ]]; then
+        # if the operator version is set to 'latest', do not pass the
+        # '--version' flag to `./run_toolbox.py gpu_operator
+        # deploy_from_operatorhub`. This will install the default CSV
+        # for the given channel (or from the default channel if not
+        # specified.)
+        true
+
+    elif [[ "$operator_version" ]]; then
+        OPERATOR_VERSION="--version=$operator_version"
+
+        if [[ "$operator_version" == "1.4"* \
+           || "$operator_version" == "1.5"* \
+           || "$operator_version" == "1.6"* ]];
+        then
             # these versions of the GPU Operator require the namespace
             # to be manually created.
             oc new-project gpu-operator-resources || true
         fi
     fi
     shift || true
-    if [ "${1:-}" ]; then
+    if [[ "${1:-}" ]]; then
         OPERATOR_CHANNEL="--channel=$1"
-        if [[ "${OPERATOR_CHANNEL}" != *"1.9"* ]]; then
+        if [[ "$operator_version" == "1.4"* \
+           || "$operator_version" == "1.5"* \
+           || "$operator_version" == "1.6"* \
+           || "$operator_version" == "1.7"* \
+           || "$operator_version" == "1.8"* ]];
+        then
+            # these versions of the GPU Operator can only be installed
+            # in "all the namespaces"
             OPERATOR_NAMESPACE="openshift-operators"
         fi
     fi

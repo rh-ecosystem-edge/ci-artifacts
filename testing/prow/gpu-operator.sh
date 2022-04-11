@@ -443,11 +443,12 @@ test_operatorhub() {
     shift || true
     if [[ "${1:-}" ]]; then
         OPERATOR_CHANNEL="--channel=$1"
+        operator_channel="$1"
         if [[ "$operator_version" == "1.4"* \
            || "$operator_version" == "1.5"* \
            || "$operator_version" == "1.6"* \
-           || "$operator_version" == "1.7"* \
-           || "$operator_version" == "1.8"* ]];
+           || "$operator_channel" == "v1.7" \
+           || "$operator_channel" == "v1.8" ]];
         then
             # these versions of the GPU Operator can only be installed
             # in "all the namespaces"

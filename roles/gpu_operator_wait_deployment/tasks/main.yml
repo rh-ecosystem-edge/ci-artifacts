@@ -51,15 +51,15 @@
   when: gpu_operator_version is version("1.7.0", ">=")
   block:
   - name: Ensure that nvidia-operator-validator DS is ready
-    command:
+    shell:
       oc get ds/nvidia-operator-validator
          -n {{ gpu_operator_namespace }}
          -oyaml
-         -ojsonpath={.status.numberUnavailable}
-    register: operator_validator_number_unavailable
+         '-ojsonpath={.status.numberReady}{" "}{.status.desiredNumberScheduled}' | awk '{print $1" = "$2}' | xargs test
+    register: operator_validator_desired_vs_ready
     until:
-    - operator_validator_number_unavailable.rc == 0
-    - not operator_validator_number_unavailable.stdout
+    - operator_validator_desired_vs_ready.rc == 0
+    - not operator_validator_desired_vs_ready.stdout
     retries: 15
     delay: 60
 

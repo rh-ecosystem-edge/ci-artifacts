@@ -79,6 +79,13 @@
   changed_when: false
   when: addon_install_needed
 
+- name: Replace single quote with double in install payload
+  when: addon_install_needed
+  replace:
+    path: "/tmp/addon_{{ com_addon_id }}.json"
+    regexp: "'"
+    replace: '"'
+
 - name: "Install addon {{ ocm_addon_id  }} via ocm"
   shell: 
     cmd: "ocm post /api/clusters_mgmt/v1/clusters/{{ ocm_cluster_id  }}/addons --body=/tmp/addon_{{ ocm_addon_id  }}.json 2>&1 | jq -r '.kind'"

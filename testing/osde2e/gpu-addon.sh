@@ -130,11 +130,23 @@ echo "OCM_ENV=${OCM_ENV:-}"
 OCM_REFRESH_TOKEN=$(oc get secrets ci-secrets -n osde2e-ci-secrets -o json | jq -r '.data|.["ocm-token-refresh"]' | base64 -d)
 echo "OCM_REFRESH_TOKEN=$(echo ${OCM_REFRESH_TOKEN} | cut -c1-6)...."
 
-echo "====== Installing RHODS"
-run_test "ocm_addon install --ocm_addon_id=managed-odh --ocm_refresh_token=${OCM_REFRESH_TOKEN} --ocm_url=${OCM_ENV} --ocm_cluster_id=${CLUSTER_ID} --wait_for_ready_state=True"
+
+################
+# OSDE2E env specific workarounds
+################
+
+if [[ ${OCM_ENV} == "integration" ]]; then
+    echo "====== Skipping RHODS install"
+else
+    echo "====== Installing RHODS"
+    run_test "ocm_addon install --ocm_addon_id=managed-odh --ocm_refresh_token=${OCM_REFRESH_TOKEN} --ocm_url=${OCM_ENV} --ocm_cluster_id=${CLUSTER_ID} --ocm_addon_params='[{"id":"notification-email","value":"sdayan@redhat.com"}]' --wait_for_ready_state=True"
+fi
+
+##### End - Should be removed and updated once RHODS is not required.
 
 echo "===== Installing GPU AddOn"
-run_test "ocm_addon install --ocm_addon_id=gpu-operator-certified-addon --ocm_refresh_token=${OCM_REFRESH_TOKEN} --ocm_url=${OCM_ENV} --ocm_cluster_id=${CLUSTER_ID}"
+run_test "ocm_addon install --ocm_addon_id=nvidia-gpu-addon --ocm_refresh_token=${OCM_REFRESH_TOKEN} --ocm_url=${OCM_ENV} --ocm_cluster_id=${CLUSTER_ID}"
+
 
 echo "====== Waiting for gpu-operator..."
 run_test "gpu_operator wait_deployment"

@@ -910,6 +910,9 @@ OCM addons
             the addon id to install. (such as `managed-odh`, `gpu-operator-certified-addon` etc.)
     
     FLAGS
+        --ocm_addon_params=OCM_ADDON_PARAMS
+            Default: []
+            Optional. list of dicts i.e [{"id":"something","value":"something"},{"id":"something_else","value":"we-get-it"}]
         --wait_for_ready_state=WAIT_FOR_READY_STATE
             Default: False
             Optional. If true will cause the role to wait until addon reports ready state. (Can time out)

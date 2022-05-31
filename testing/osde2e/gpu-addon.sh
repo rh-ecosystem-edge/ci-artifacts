@@ -148,7 +148,7 @@ ocm login --token=${OCM_REFRESH_TOKEN} --url=${OCM_ENV}
 # OSDE2E env specific workarounds
 ################
 
-if [[ ${OCM_ENV} == "integration" ]]; then
+if [[ ${OCM_ENV} == "int" ]]; then # integration
     echo "====== Skipping RHODS install"
 else
     echo "====== Installing RHODS"

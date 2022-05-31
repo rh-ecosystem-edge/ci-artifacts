@@ -1,0 +1,48 @@
+---
+- name: Fail if ocm_refresh_token is undefined
+  fail: msg="Bailing out. This play requires ocm_refresh_token"
+  when: ocm_refresh_token is undefined
+
+- name: Fail if ocm_url is undefined
+  fail: msg="Bailing out. This play requires 'ocm_url'"
+  when: ocm_url is undefined
+
+- name: Fail if ocm_cluster_id is undefined
+  fail: msg="Bailing out. This play requires 'ocm_cluster_id'"
+  when: ocm_cluster_id is undefined
+
+- name: Debug cluster and url (env)
+  debug:
+    msg: "ocm_cluster_id: {{ ocm_cluster_id  }}, ocm_url: {{ ocm_url }}"
+
+- name: Check if ocm is available
+  command: ocm version
+  register: ocm_version
+  changed_when: false
+  failed_when: false
+
+- name: Fail if ocm is not available
+  fail: msg="ocm version command returned with a non 0 code"
+  when: ocm_version.rc|int != 0
+
+- name: Login to ocm
+  command: "ocm login --token={{ ocm_refresh_token }} --url={{ ocm_url }}"
+  no_log: true
+  register: ocm_login_cmd
+  changed_when: false
+
+- name: Check ocm whoami
+  command: ocm whoami
+  register: ocm_whoami
+  changed_when: false
+  failed_when: false
+
+- name: Fail if ocm is not logged in
+  fail: msg="ocm whoami failed with return code {{ ocm_whoami.rc  }}"
+  when: ocm_whoami.rc|int != 0
+
+- name: ocm whoami
+  debug:
+    msg: "ocm whoami: {{ ocm_whoami.stdout  }}"
+  changed_when: false
+  failed_when: false

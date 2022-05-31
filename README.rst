@@ -919,3 +919,34 @@ OCM addons
     
     NOTES
         You can also use flags syntax for POSITIONAL ARGUMENTS
+
+``./run_toolbox.py ocm_addon remove``
+
+.. code-block:: text
+
+    NAME
+        run_toolbox.py ocm_addon remove - Removes an OCM addon
+    
+    SYNOPSIS
+        run_toolbox.py ocm_addon remove OCM_REFRESH_TOKEN OCM_CLUSTER_ID OCM_URL OCM_ADDON_ID <flags>
+    
+    DESCRIPTION
+        Removes an OCM addon
+    
+    POSITIONAL ARGUMENTS
+        OCM_REFRESH_TOKEN
+            For OCM login auth
+        OCM_CLUSTER_ID
+            Cluster ID from OCM's POV
+        OCM_URL
+            Used to determine environment
+        OCM_ADDON_ID
+            the addon id to install. (such as `managed-odh`, `gpu-operator-certified-addon` etc.)
+    
+    FLAGS
+        --wait_until_removed=WAIT_UNTIL_REMOVED
+            Default: False
+            Optional. If true will cause the role to wait until addon is removed from cluster. (Can time out)
+    
+    NOTES
+        You can also use flags syntax for POSITIONAL ARGUMENTS

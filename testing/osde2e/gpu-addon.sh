@@ -26,6 +26,7 @@ source $THIS_DIR/../prow/gpu-operator.sh source
 
 function exit_and_abort() {
     echo "====== Test failed. Aborting."
+    cleanup_addons
     must_gather
     tar_artifacts
     exit 1
@@ -118,6 +119,16 @@ function tar_artifacts() {
     echo "====== Archive Done."
 }
 
+function cleanup_addons() {
+    echo "====== Cleaning up addons"
+    echo ""
+    echo "====== Removing RHODS..."
+    run_test "ocm_addon remove --ocm_addon_id=managed-odh --ocm_url=${OCM_ENV} --ocm_cluster_id=${CLUSTER_ID}  --wait_until_removed=True"
+    echo "====== Removing NVIDIA GPU Add-on..."
+    run_test "ocm_addon remove --ocm_addon_id=nvidia-gpu-addon --ocm_url=${OCM_ENV} --ocm_cluster_id=${CLUSTER_ID}  --wait_until_removed=True"
+    echo "====== Cleanup Done"
+}
+
 echo "====== Starting OSDE2E tests..."
 
 echo "Using ARTIFACT_DIR=$ARTIFACT_DIR."
@@ -130,22 +141,24 @@ echo "OCM_ENV=${OCM_ENV:-}"
 OCM_REFRESH_TOKEN=$(oc get secrets ci-secrets -n osde2e-ci-secrets -o json | jq -r '.data|.["ocm-token-refresh"]' | base64 -d)
 echo "OCM_REFRESH_TOKEN=$(echo ${OCM_REFRESH_TOKEN} | cut -c1-6)...."
 
+ocm login --token=${OCM_REFRESH_TOKEN} --url=${OCM_ENV}
+
 
 ################
 # OSDE2E env specific workarounds
 ################
 
-if [[ ${OCM_ENV} == "integration" ]]; then
+if [[ ${OCM_ENV} == "int" ]]; then # integration
     echo "====== Skipping RHODS install"
 else
     echo "====== Installing RHODS"
-    run_test "ocm_addon install --ocm_addon_id=managed-odh --ocm_refresh_token=${OCM_REFRESH_TOKEN} --ocm_url=${OCM_ENV} --ocm_cluster_id=${CLUSTER_ID} --ocm_addon_params='[{"id":"notification-email","value":"sdayan@redhat.com"}]' --wait_for_ready_state=True"
+    run_test "ocm_addon install --ocm_addon_id=managed-odh --ocm_url=${OCM_ENV} --ocm_cluster_id=${CLUSTER_ID} --ocm_addon_params='[{"id":"notification-email","value":"sdayan@redhat.com"}]' --wait_for_ready_state=True"
 fi
 
 ##### End - Should be removed and updated once RHODS is not required.
 
 echo "===== Installing GPU AddOn"
-run_test "ocm_addon install --ocm_addon_id=nvidia-gpu-addon --ocm_refresh_token=${OCM_REFRESH_TOKEN} --ocm_url=${OCM_ENV} --ocm_cluster_id=${CLUSTER_ID}"
+run_test "ocm_addon install --ocm_addon_id=nvidia-gpu-addon --ocm_url=${OCM_ENV} --ocm_cluster_id=${CLUSTER_ID}"
 
 
 echo "====== Waiting for gpu-operator..."
@@ -155,6 +168,7 @@ echo "====== Operator found."
 echo "====== Running burn test for $((BURN_RUNTIME_SEC/60)) minutes ..."
 run_test "gpu_operator run_gpu_burn --runtime=${BURN_RUNTIME_SEC}"
 
+cleanup_addons
 must_gather
 tar_artifacts
 echo "====== Finished all jobs."

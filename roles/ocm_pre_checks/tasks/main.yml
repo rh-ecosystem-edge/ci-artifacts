@@ -1,8 +1,4 @@
 ---
-- name: Fail if ocm_refresh_token is undefined
-  fail: msg="Bailing out. This play requires ocm_refresh_token"
-  when: ocm_refresh_token is undefined
-
 - name: Fail if ocm_url is undefined
   fail: msg="Bailing out. This play requires 'ocm_url'"
   when: ocm_url is undefined
@@ -24,12 +20,6 @@
 - name: Fail if ocm is not available
   fail: msg="ocm version command returned with a non 0 code"
   when: ocm_version.rc|int != 0
-
-- name: Login to ocm
-  command: "ocm login --token={{ ocm_refresh_token }} --url={{ ocm_url }}"
-  no_log: true
-  register: ocm_login_cmd
-  changed_when: false
 
 - name: Check ocm whoami
   command: ocm whoami

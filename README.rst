@@ -894,14 +894,12 @@ OCM addons
         run_toolbox.py ocm_addon install - Installs an OCM addon
     
     SYNOPSIS
-        run_toolbox.py ocm_addon install OCM_REFRESH_TOKEN OCM_CLUSTER_ID OCM_URL OCM_ADDON_ID <flags>
+        run_toolbox.py ocm_addon install OCM_CLUSTER_ID OCM_URL OCM_ADDON_ID <flags>
     
     DESCRIPTION
         Installs an OCM addon
     
     POSITIONAL ARGUMENTS
-        OCM_REFRESH_TOKEN
-            For OCM login auth
         OCM_CLUSTER_ID
             Cluster ID from OCM's POV
         OCM_URL
@@ -928,14 +926,12 @@ OCM addons
         run_toolbox.py ocm_addon remove - Removes an OCM addon
     
     SYNOPSIS
-        run_toolbox.py ocm_addon remove OCM_REFRESH_TOKEN OCM_CLUSTER_ID OCM_URL OCM_ADDON_ID <flags>
+        run_toolbox.py ocm_addon remove OCM_CLUSTER_ID OCM_URL OCM_ADDON_ID <flags>
     
     DESCRIPTION
         Removes an OCM addon
     
     POSITIONAL ARGUMENTS
-        OCM_REFRESH_TOKEN
-            For OCM login auth
         OCM_CLUSTER_ID
             Cluster ID from OCM's POV
         OCM_URL

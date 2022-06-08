@@ -26,7 +26,6 @@ source $THIS_DIR/../prow/gpu-operator.sh source
 
 function exit_and_abort() {
     echo "====== Test failed. Aborting."
-    cleanup_addons
     must_gather
     tar_artifacts
     exit 1
@@ -119,15 +118,6 @@ function tar_artifacts() {
     echo "====== Archive Done."
 }
 
-function cleanup_addons() {
-    echo "====== Cleaning up addons"
-    echo ""
-    echo "====== Removing RHODS..."
-    run_test "ocm_addon remove --ocm_addon_id=managed-odh --ocm_url=${OCM_ENV} --ocm_cluster_id=${CLUSTER_ID}  --wait_until_removed=True"
-    echo "====== Removing NVIDIA GPU Add-on..."
-    run_test "ocm_addon remove --ocm_addon_id=nvidia-gpu-addon --ocm_url=${OCM_ENV} --ocm_cluster_id=${CLUSTER_ID}  --wait_until_removed=True"
-    echo "====== Cleanup Done"
-}
 
 echo "====== Starting OSDE2E tests..."
 
@@ -168,7 +158,6 @@ echo "====== Operator found."
 echo "====== Running burn test for $((BURN_RUNTIME_SEC/60)) minutes ..."
 run_test "gpu_operator run_gpu_burn --runtime=${BURN_RUNTIME_SEC}"
 
-cleanup_addons
 must_gather
 tar_artifacts
 echo "====== Finished all jobs."

@@ -16,6 +16,7 @@
 
 - name: Set addon current state
   set_fact:
+    wait_for_removal: "{{ wait_until_removed == 'True' }}"
     addon_installed: "{{ ocm_addon_precheck.stdout != 'Error' }}"
   changed_when: false
 
@@ -39,7 +40,7 @@
     - addon_remove_command.stdout == 'Error'
 
 - name: Debug wait_until_removed
-  debug: msg="Wait for ready state={{ wait_until_removed }}"
+  debug: msg="Wait for ready state={{ wait_for_removal }}"
 
 - name: Poll addon state until reached desired state
   shell:
@@ -49,11 +50,11 @@
   retries: 8
   delay: 600
   until: | 
-    (addon_state_result.stdout == 'deleting' and not wait_until_removed) or
+    (addon_state_result.stdout == 'deleting' and not wait_for_removal) or
     (addon_state_result.stdout == '')
   failed_when: |
     (addon_state_result.stdout == 'installing') or
     (addon_state_result.stdout == 'failed')
 
 - name: Polling end debug info
-  debug: msg="AddinId={{ ocm_addon_id }}, Wait until removed={{ wait_until_removed }}, Current addon state={{ addon_state_result.stdout }}"
+  debug: msg="AddinId={{ ocm_addon_id }}, Wait until removed={{ wait_for_removal }}, Current addon state={{ addon_state_result.stdout }}"

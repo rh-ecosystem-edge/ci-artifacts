@@ -16,6 +16,7 @@
 
 - name: Set addon current state
   set_fact:
+    wait_until_ready: "{{ wait_for_ready_state == 'True' }}"
     addon_install_needed: "{{ ocm_addon_precheck.stdout == 'Error' }}"
   changed_when: false
 
@@ -25,22 +26,27 @@
 
 - name: Create ocm addon install payload
   template:
-    src: roles/ocm_install_addon/files/ocm_addon_template.json.j2
-    dest: /tmp/addon_{{ ocm_addon_id  }}.json
-    mode: '0777'
+    src: "{{ ocm_deploy_addon_template }}"
+    dest: "{{ artifact_extra_logs_dir }}/addon_{{ ocm_addon_id }}.json"
+    mode: 0400
   changed_when: false
   when: addon_install_needed
 
 - name: Replace single quote with double in install payload
   when: addon_install_needed
   replace:
-    path: "/tmp/addon_{{ com_addon_id }}.json"
+    path: "{{ artifact_extra_logs_dir }}/addon_{{ ocm_addon_id }}.json"
     regexp: "'"
     replace: '"'
 
 - name: "Install addon {{ ocm_addon_id  }} via ocm"
-  shell: 
-    cmd: "ocm post /api/clusters_mgmt/v1/clusters/{{ ocm_cluster_id  }}/addons --body=/tmp/addon_{{ ocm_addon_id  }}.json 2>&1 | jq -r '.kind'"
+  shell: |
+    set -o pipefail;
+    url="/api/clusters_mgmt/v1/clusters/{{ ocm_cluster_id }}/addons"
+    body="{{ artifact_extra_logs_dir }}/addon_{{ ocm_addon_id  }}.json"
+    output=$(ocm post "$url" --body=$body 2>&1);
+    echo "$output" >&2; # for observation
+    echo "$output" | jq -r '.kind'
   register: addon_install_command
   failed_when: false
   when: addon_install_needed
@@ -53,23 +59,26 @@
     - addon_install_command.stdout is defined
     - addon_install_command.stdout != 'AddOnInstallation'
 
-- name: Debug wait_for_ready_state
-  debug: msg="Wait for ready state={{ wait_for_ready_state }}"
+- name: Debug wait_until_ready
+  debug: msg="Wait for ready state={{ wait_until_ready }}"
 
 - name: Poll addon state until reached desired state
-  shell:
-    cmd: "ocm get /api/clusters_mgmt/v1/clusters/{{ ocm_cluster_id }}/addons/{{ ocm_addon_id  }} 2>&1 | jq -r '.state'"
+  shell: |
+    set -o pipefail;
+    url="/api/clusters_mgmt/v1/clusters/{{ ocm_cluster_id }}/addons/{{ ocm_addon_id }}";
+    output=$(ocm get "$url" 2>&1)
+    echo "$output" >&2; # for observation
+    echo "$output" | jq -r '.state'
   register: addon_state_result
   changed_when: false
-  retries: 8
-  delay: 600
-  until: | 
-    (addon_state_result.stdout == 'installing' and not wait_for_ready_state) or
-    (addon_state_result.stdout == 'ready')
+  retries: 60
+  delay: 60
+  until: |
+    ('deleting' in addon_state_result.stdout) or
+    ('failed' in addon_state_result.stdout) or
+    ('installing' in addon_state_result.stdout and not wait_until_ready) or
+    ('ready' in addon_state_result.stdout) 
   failed_when: |
-    (addon_state_result.stdout == 'deleting') or
-    (addon_state_result.stdout == 'failed') or
-    (wait_for_ready_state and addon_state_result.stdout != 'ready')
-
-- name: Polling end debug info
-  debug: msg="AddinId={{ ocm_addon_id }}, Wait for ready state={{ wait_for_ready_state }}, Current addon state={{ addon_state_result.stdout }}"
+    ('deleting' in addon_state_result.stdout) or
+    ('failed' in addon_state_result.stdout) or
+    ('ready' not in addon_state_result.stdout and wait_until_ready)

@@ -1,3 +1,4 @@
 ---
-wait_for_ready_state: false
+ocm_deploy_addon_template: "roles/ocm_install_addon/files/ocm_addon_template.json.j2"
+wait_for_ready_state: False
 ocm_addon_params: []

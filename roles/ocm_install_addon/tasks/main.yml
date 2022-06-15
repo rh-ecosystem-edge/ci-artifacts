@@ -8,7 +8,7 @@
     msg: "ocm addon id to install: {{ ocm_addon_id  }}"
 
 - name: Check if addon is already installed
-  shell: 
+  shell:
     cmd: "ocm get /api/clusters_mgmt/v1/clusters/{{ ocm_cluster_id }}/addons/{{ ocm_addon_id  }} 2>&1 | jq -r '.kind'"
   register: ocm_addon_precheck
   failed_when: false
@@ -16,12 +16,12 @@
 
 - name: Set addon current state
   set_fact:
-    wait_until_ready: "{{ wait_for_ready_state == 'True' }}"
+    wait_until_ready: "{{ wait_for_ready_state | bool }}"
     addon_install_needed: "{{ ocm_addon_precheck.stdout == 'Error' }}"
   changed_when: false
 
 - name: Install needed
-  debug: 
+  debug:
     msg: "Install needed: {{ addon_install_needed  }}"
 
 - name: Create ocm addon install payload
@@ -52,9 +52,9 @@
   when: addon_install_needed
 
 - name: Fail if response kind is not AddOnInstallation
-  fail: 
+  fail:
     msg: "response kind: {{ addon_install_command.stdout }}"
-  when: 
+  when:
     - addon_install_command is defined
     - addon_install_command.stdout is defined
     - addon_install_command.stdout != 'AddOnInstallation'
@@ -77,7 +77,7 @@
     ('deleting' in addon_state_result.stdout) or
     ('failed' in addon_state_result.stdout) or
     ('installing' in addon_state_result.stdout and not wait_until_ready) or
-    ('ready' in addon_state_result.stdout) 
+    ('ready' in addon_state_result.stdout)
   failed_when: |
     ('deleting' in addon_state_result.stdout) or
     ('failed' in addon_state_result.stdout) or

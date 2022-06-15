@@ -142,7 +142,7 @@ if [[ ${OCM_ENV} == "int" ]]; then # integration
     echo "====== Skipping RHODS install"
 else
     echo "====== Installing RHODS"
-    run_test "ocm_addon install --ocm_addon_id=managed-odh --ocm_url=${OCM_ENV} --ocm_cluster_id=${CLUSTER_ID} --ocm_addon_params='[{"id":"notification-email","value":"sdayan@redhat.com"}]' --wait_for_ready_state=True"
+    run_test "ocm_addon install --ocm_addon_id=managed-odh --ocm_url=${OCM_ENV} --ocm_cluster_id=${CLUSTER_ID} --ocm_addon_params='[{\"id\":\"notification-email\",\"value\":\"example@example.com\"}]' --wait_for_ready_state=True"
 fi
 
 ##### End - Should be removed and updated once RHODS is not required.

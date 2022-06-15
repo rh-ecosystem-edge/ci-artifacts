@@ -8,7 +8,7 @@
     msg: "ocm addon id to install: {{ ocm_addon_id  }}"
 
 - name: Check if addon is already installed
-  shell: 
+  shell:
     cmd: "ocm get /api/clusters_mgmt/v1/clusters/{{ ocm_cluster_id }}/addons/{{ ocm_addon_id  }} 2>&1 | jq -r '.kind'"
   register: ocm_addon_precheck
   failed_when: false
@@ -16,25 +16,25 @@
 
 - name: Set addon current state
   set_fact:
-    wait_for_removal: "{{ wait_until_removed == 'True' }}"
+    wait_for_removal: "{{ wait_until_removed | bool }}"
     addon_installed: "{{ ocm_addon_precheck.stdout != 'Error' }}"
   changed_when: false
 
 - name: Is addon installed
-  debug: 
+  debug:
     msg: "Addon installed in cluster: {{ addon_installed }}"
 
 - name: "Remove addon {{ ocm_addon_id  }} via ocm"
-  shell: 
+  shell:
     cmd: "ocm delete /api/clusters_mgmt/v1/clusters/{{ ocm_cluster_id  }}/addons/{{ ocm_addon_id  }} 2>&1 | jq -r '.kind'"
   register: addon_remove_command
   failed_when: false
   when: addon_installed
 
 - name: Fail if response kind is Error
-  fail: 
+  fail:
     msg: "response kind: {{ addon_remove_command.stdout }}"
-  when: 
+  when:
     - addon_remove_command is defined
     - addon_remove_command.stdout is defined
     - addon_remove_command.stdout == 'Error'
@@ -49,7 +49,7 @@
   changed_when: false
   retries: 8
   delay: 600
-  until: | 
+  until: |
     (addon_state_result.stdout == 'deleting' and not wait_for_removal) or
     (addon_state_result.stdout == '')
   failed_when: |

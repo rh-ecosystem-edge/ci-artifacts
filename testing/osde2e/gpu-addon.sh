@@ -91,7 +91,7 @@ function finalize_junit() {
     sed -i "s/TIMESTAMP/$(date -Is)/g" "${JUNIT_FILE}"
 
     cat $OUTPUT_FILE >> $JUNIT_FILE
-    cat >> "${JUNIT_FILE}" <<EOF  
+    cat >> "${JUNIT_FILE}" <<EOF
     $JUNIT_FOOTER_TEMPLATE
 EOF
 
@@ -148,7 +148,7 @@ fi
 ##### End - Should be removed and updated once RHODS is not required.
 
 echo "===== Installing GPU AddOn"
-run_test "ocm_addon install --ocm_addon_id=nvidia-gpu-addon --ocm_url=${OCM_ENV} --ocm_cluster_id=${CLUSTER_ID}"
+run_test "ocm_addon install --ocm_addon_id=nvidia-gpu-addon --ocm_url=${OCM_ENV} --ocm_cluster_id=${CLUSTER_ID} --wait_for_ready_state=True"
 
 
 echo "====== Waiting for gpu-operator..."

@@ -151,6 +151,12 @@ echo "===== Installing GPU AddOn"
 run_test "ocm_addon install --ocm_addon_id=nvidia-gpu-addon --ocm_url=${OCM_ENV} --ocm_cluster_id=${CLUSTER_ID} --wait_for_ready_state=True"
 
 
+# Wait for NFD labels
+echo "====== Waiting for NFD labels..."
+run_test "nfd wait_labels"
+echo "====== NFD labels found."
+
+
 echo "====== Waiting for gpu-operator..."
 run_test "gpu_operator wait_deployment"
 echo "====== Operator found."

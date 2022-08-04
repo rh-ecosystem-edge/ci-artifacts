@@ -148,7 +148,7 @@ fi
 ##### End - Should be removed and updated once RHODS is not required.
 
 echo "===== Installing GPU AddOn"
-run_test "ocm_addon install --ocm_addon_id=nvidia-gpu-addon --ocm_url=${OCM_ENV} --ocm_cluster_id=${CLUSTER_ID} --wait_for_ready_state=True"
+run_test "ocm_addon install --ocm_addon_id=nvidia-gpu-addon --ocm_url=${OCM_ENV} --ocm_cluster_id=${CLUSTER_ID} --wait_for_ready_state=False"
 
 
 # Wait for NFD labels

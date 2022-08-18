@@ -15,7 +15,7 @@ spec:
     type: Dockerfile
     dockerfile: |
       # git/Dockerfile
-      # https://github.com/containers/buildah/blob/master/contrib/buildahimage/upstream/Dockerfile
+      # https://github.com/containers/buildah/blob/main/contrib/buildahimage/upstream/Containerfile
       #
       # Build a Buildah container image from the latest
       # upstream version of Buildah on GitHub.
@@ -25,63 +25,54 @@ spec:
       # The containers created by this image also come with a
       # Buildah development environment in /root/buildah.
       #
-      FROM registry.fedoraproject.org/fedora:35
-      ENV GOPATH=/root/buildah
+      FROM registry.fedoraproject.org/fedora:36
 
-      # Install the software required to build Buildah.
-      # Then create a directory and clone from the Buildah
-      # GitHub repository, make and install Buildah
-      # to the container.
-      # Finally remove the buildah directory and a few other packages
-      # that are needed for building but not running Buildah
-      RUN useradd build \
-          && yum -y update \
-          && yum -y reinstall shadow-utils \
-          && yum -y install --enablerepo=updates-testing \
-            make \
-            golang \
-            podman \
-            bats \
-            btrfs-progs-devel \
-            device-mapper-devel \
-            glib2-devel \
-            gpgme-devel \
-            libassuan-devel \
-            libseccomp-devel \
-            git \
-            bzip2 \
-            xz \
-            go \
-            go-md2man \
-            runc \
-            fuse-overlayfs \
-            fuse3 \
-            containers-common \
-            jq \
-            python3 python3-devel python3-pip python3-setuptools \
-            hostname \
-          && mkdir /root/buildah \
-          && git clone https://github.com/containers/buildah /root/buildah/src/github.com/containers/buildah \
-          && cd /root/buildah/src/github.com/containers/buildah \
-          && make \
-          && make install \
-          && rm -rf /root/buildah/* \
-          && yum -y remove bats golang go-md2man \
-          && yum clean all \
-          && cd / \
-          && python3 -m pip install --no-cache-dir --upgrade setuptools pip wheel \
-          && python3 -m pip install --no-cache-dir yq
+      # Don't include container-selinux and remove
+      # directories used by dnf that are just taking
+      # up space.  The latest buildah + deps. come from
+      # https://copr.fedorainfracloud.org/coprs/rhcontainerbot/podman-next/
+      # TODO: rpm --setcaps... needed due to Fedora (base) image builds
+      #       being (maybe still?) affected by
+      #       https://bugzilla.redhat.com/show_bug.cgi?id=1995337#c3
+      RUN dnf -y update && \
+          rpm --setcaps shadow-utils 2>/dev/null && \
+          dnf -y install 'dnf-command(copr)' --enablerepo=updates-testing && \
+          dnf -y copr enable rhcontainerbot/podman-next && \
+          dnf -y install buildah fuse-overlayfs \
+              --exclude container-selinux \
+              --enablerepo=updates-testing && \
+          dnf clean all && \
+          rm -rf /var/cache /var/log/dnf* /var/log/yum.*
 
-      ADD https://raw.githubusercontent.com/containers/buildah/master/contrib/buildahimage/stable/containers.conf /etc/containers/
+      # Define uid/gid ranges for our user https://github.com/containers/buildah/issues/3053
+      RUN useradd build && \
+          echo -e "build:1:999\npodman:1001:64535" > /etc/subuid && \
+          echo -e "build:1:999\npodman:1001:64535" > /etc/subgid && \
+          mkdir -p /home/build/.local/share/containers && \
+          chown -R build:build /home/build
 
-      # Adjust storage.conf to enable Fuse storage.
-      RUN chmod 644 /etc/containers/containers.conf \
-        && sed -i -e 's|^#mount_program|mount_program|g' -e '/additionalimage.*/a "/var/lib/shared",' -e 's|^mountopt[[:space:]]*=.*$|mountopt = "nodev,fsync=0"|g' /etc/containers/storage.conf
-      RUN mkdir -p /var/lib/shared/overlay-images /var/lib/shared/overlay-layers /var/lib/shared/vfs-images /var/lib/shared/vfs-layers \
-        && touch /var/lib/shared/overlay-images/images.lock \
-        && touch /var/lib/shared/overlay-layers/layers.lock \
-        && touch /var/lib/shared/vfs-images/images.lock \
-        && touch /var/lib/shared/vfs-layers/layers.lock
+      ADD https://raw.githubusercontent.com/containers/buildah/main/contrib/buildahimage/stable/containers.conf /etc/containers/
+
+      # Copy & modify the defaults to provide reference if runtime changes needed.
+      # Changes here are required for running with fuse-overlay storage inside container.
+      RUN sed -e 's|^#mount_program|mount_program|g' \
+              -e '/additionalimage.*/a "/var/lib/shared",' \
+              -e 's|^mountopt[[:space:]]*=.*$|mountopt = "nodev,fsync=0"|g' \
+              /usr/share/containers/storage.conf \
+              > /etc/containers/storage.conf && \
+          chmod 644 /etc/containers/storage.conf
+
+      RUN mkdir -p /var/lib/shared/overlay-images \
+                   /var/lib/shared/overlay-layers \
+                   /var/lib/shared/vfs-images \
+                   /var/lib/shared/vfs-layers && \
+          touch /var/lib/shared/overlay-images/images.lock && \
+          touch /var/lib/shared/overlay-layers/layers.lock && \
+          touch /var/lib/shared/vfs-images/images.lock && \
+          touch /var/lib/shared/vfs-layers/layers.lock
+
+      VOLUME /var/lib/containers
+      VOLUME /home/build/.local/share/containers
 
       # Set an environment variable to default to chroot isolation for RUN
       # instructions and "buildah run".

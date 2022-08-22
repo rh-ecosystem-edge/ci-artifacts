@@ -86,100 +86,31 @@ function addon_must_gather() {
 
             oc adm must-gather --image="$MUST_GATHER_IMAGE" --dest-dir="${TMP_DIR}" &> /dev/null
 
-            # TODO: Verify the must-gather script collects at least the following files/resources (???):
-            # - directory that corresponds to the must-gather image
-            # │   ├── cluster-scoped-resources
-            # │   │   ├── console.openshift.io
-            # │   │   │   └── consoleplugins
-            # │   │   │       └── console-plugin-nvidia-gpu.yaml
-            # │   │   └── operators.coreos.com
-            # │   │       └── operators
-            # │   │           ├── gpu-operator-certified.redhat-nvidia-gpu-addon.yaml
-            # │   │           ├── nvidia-gpu-addon-operator.redhat-nvidia-gpu-addon.yaml
-            # │   │           ├── ose-nfd.redhat-nvidia-gpu-addon.yaml
-            # │   │           └── ose-prometheus-operator.redhat-nvidia-gpu-addon.yaml
-            # │   ├── namespaces
-            # │   │   └── redhat-nvidia-gpu-addon
-            # │   │       ├── apps
-            # │   │       │   ├── daemonsets.yaml
-            # │   │       │   ├── deployments.yaml
-            # │   │       │   ├── replicasets.yaml
-            # │   │       │   └── statefulsets.yaml
-            # │   │       ├── apps.openshift.io
-            # │   │       │   └── deploymentconfigs.yaml
-            # │   │       ├── autoscaling
-            # │   │       │   └── horizontalpodautoscalers.yaml
-            # │   │       ├── batch
-            # │   │       │   ├── cronjobs.yaml
-            # │   │       │   └── jobs.yaml
-            # │   │       ├── build.openshift.io
-            # │   │       │   ├── buildconfigs.yaml
-            # │   │       │   └── builds.yaml
-            # │   │       ├── core
-            # │   │       │   ├── configmaps.yaml
-            # │   │       │   ├── endpoints.yaml
-            # │   │       │   ├── events.yaml
-            # │   │       │   ├── persistentvolumeclaims.yaml
-            # │   │       │   ├── pods.yaml
-            # │   │       │   ├── replicationcontrollers.yaml
-            # │   │       │   ├── secrets.yaml
-            # │   │       │   └── services.yaml
-            # │   │       ├── discovery.k8s.io
-            # │   │       │   └── endpointslices.yaml
-            # │   │       ├── image.openshift.io
-            # │   │       │   └── imagestreams.yaml
-            # │   │       ├── monitoring.coreos.com
-            # │   │       │   └── prometheuses
-            # │   │       │       └── gpuaddon-prometheus.yaml
-            # │   │       ├── networking.k8s.io
-            # │   │       │   └── networkpolicies.yaml
-            # │   │       ├── nfd.openshift.io
-            # │   │       │   └── nodefeaturediscoveries
-            # │   │       │       └── ocp-gpu-addon.yaml
-            # │   │       ├── nvidia.addons.rh-ecosystem-edge.io
-            # │   │       │   └── gpuaddons
-            # │   │       │       └── nvidia-gpu-addon.yaml
-            # │   │       ├── operators.coreos.com
-            # │   │       │   ├── catalogsources
-            # │   │       │   │   └── addon-nvidia-gpu-addon-catalog.yaml
-            # │   │       │   └── subscriptions
-            # │   │       │       ├── gpu-operator-certified.yaml
-            # │   │       │       ├── nvidia-gpu-addon-operator.yaml
-            # │   │       │       ├── ose-nfd-stable-addon-nvidia-gpu-addon-catalog-redhat-nvidia-gpu-addon.yaml
-            # │   │       │       └── ose-prometheus-operator-beta-addon-nvidia-gpu-addon-catalog-redhat-nvidia-gpu-addon.yaml
-            # │   │       ├── pods
-            # │   │       │   ├── addon-nvidia-gpu-addon-catalog-XXXX
-            # │   │       │   ├── alertmanager-gpuaddon-alertmanager-XXXX
-            # │   │       │   ├── console-plugin-nvidia-gpu-XXXX
-            # │   │       │   ├── controller-manager-XXXX
-            # │   │       │   ├── gpu-feature-discovery-XXXX
-            # │   │       │   ├── gpu-operator-XXXX
-            # │   │       │   ├── nfd-controller-manager-XXXX
-            # │   │       │   ├── nfd-master-XXXX
-            # │   │       │   ├── nfd-worker-XXXX
-            # │   │       │   ├── nvidia-container-toolkit-daemonset-XXXX
-            # │   │       │   ├── nvidia-cuda-validator-XXXX
-            # │   │       │   ├── nvidia-dcgm-exporter-XXXX
-            # │   │       │   ├── nvidia-dcgm-XXXX
-            # │   │       │   ├── nvidia-device-plugin-daemonset-XXXX
-            # │   │       │   ├── nvidia-device-plugin-validator-XXXX
-            # │   │       │   ├── nvidia-driver-daemonset-XXXX
-            # │   │       │   ├── nvidia-node-status-exporter-XXXX
-            # │   │       │   ├── nvidia-operator-validator-XXXX
-            # │   │       │   ├── prometheus-gpuaddon-prometheus-XXXX
-            # │   │       │   └── prometheus-operator-XXXX
-            # │   │       ├── policy
-            # │   │       │   └── poddisruptionbudgets.yaml
-            # │   │       ├── redhat-nvidia-gpu-addon.yaml
-            # │   │       └── route.openshift.io
-            # │   │           └── routes.yaml
-
             if [[ "$(ls "${TMP_DIR}"/*/* 2>/dev/null | wc -l)" == 0 ]]; then
                 echo "GPU add-on must-gather image failed to must-gather anything ..."
             else
                 img_dirname=$(dirname "$(ls "${TMP_DIR}"/*/* | head -1)")
                 mv "$img_dirname"/* $TMP_DIR
                 rmdir "$img_dirname"
+
+                EXPECTED_FILES=(
+                    "cluster-scoped-resources/console.openshift.io/consoleplugins/"
+                    "cluster-scoped-resources/operators.coreos.com/operators/"
+                    "namespaces/redhat-nvidia-gpu-addon/monitoring.coreos.com/prometheuses/"
+                    "namespaces/redhat-nvidia-gpu-addon/nfd.openshift.io/nodefeaturediscoveries/"
+                    "namespaces/redhat-nvidia-gpu-addon/nvidia.addons.rh-ecosystem-edge.io/gpuaddons/"
+                    "namespaces/redhat-nvidia-gpu-addon/operators.coreos.com/catalogsources/"
+                    "namespaces/redhat-nvidia-gpu-addon/operators.coreos.com/subscriptions/"
+                    "namespaces/redhat-nvidia-gpu-addon/pods/"
+                    "namespaces/redhat-nvidia-gpu-addon/redhat-nvidia-gpu-addon.yaml"
+                )
+
+                for file in "${EXPECTED_FILES[@]}"
+                do
+                    if [[ "$(ls -1 "$img_dirname/$file" 2>/dev/null | wc -l)" == 0 ]]; then
+                        echo "Exected file/directory was not found or is empty: $file"
+                    fi
+                done
 
                 # extract ARTIFACT_EXTRA_LOGS_DIR from 'source toolbox/_common.sh' without sourcing it directly
                 export TOOLBOX_SCRIPT_NAME=toolbox/gpu-operator/must-gather.sh

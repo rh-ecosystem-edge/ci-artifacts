@@ -44,6 +44,18 @@ spec:
           dnf clean all && \
           rm -rf /var/cache /var/log/dnf* /var/log/yum.*
 
+      # The following layer is not part of the original file
+      RUN dnf -y install git \
+            jq \
+            make \
+            podman \
+            python3 python3-devel python3-pip python3-setuptools \
+            --exclude container-selinux \
+            --enablerepo=updates-testing && \
+          dnf clean all && \
+          python3 -m pip install --no-cache-dir --upgrade setuptools pip wheel && \
+          python3 -m pip install --no-cache-dir yq
+
       # Define uid/gid ranges for our user https://github.com/containers/buildah/issues/3053
       RUN useradd build && \
           echo -e "build:1:999\npodman:1001:64535" > /etc/subuid && \

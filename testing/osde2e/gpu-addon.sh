@@ -43,13 +43,13 @@ function exit_and_abort() {
 
 function run_test() {
     TARGET=${1:-}
-    TARGET_SHORT=$(echo $TARGET | awk '{print $1"_"$2}')
+    TARGET_SHORT=$(echo "$TARGET" | awk '{print $1"_"$2}')
     echo "====== Running toolbox '$TARGET_SHORT'"
     # Make sure a new junit is generated for this run
     export FILE_POSTFIX=0
-    JUNIT_FILE_NAME=$(echo $TARGET | awk -v target=$TARGET_SHORT '{print "junit_"target}')
+    JUNIT_FILE_NAME=$(echo "$TARGET" | awk -v target="$TARGET_SHORT" '{print "junit_"target}')
     JUNIT_FILE="${JUNIT_DIR}/${JUNIT_FILE_NAME}_${FILE_POSTFIX}.xml"
-    while [ -f $JUNIT_FILE ]; do
+    while [ -f "$JUNIT_FILE" ]; do
         FILE_POSTFIX=$((FILE_POSTFIX + 1))
         JUNIT_FILE="${JUNIT_DIR}/${JUNIT_FILE_NAME}_${FILE_POSTFIX}.xml"
     done
@@ -59,11 +59,11 @@ function run_test() {
 
     trap trap_run_test EXIT
 
-    cat > ${JUNIT_FILE} <<EOF
+    cat > "${JUNIT_FILE}" <<EOF
 $JUNIT_HEADER_TEMPLATE
 EOF
 
-    /usr/bin/time -o ${RUNTIME_FILE} ./run_toolbox.py ${TARGET} > $OUTPUT_FILE
+    /usr/bin/time -o ${RUNTIME_FILE} ./run_toolbox.py "${TARGET}" > $OUTPUT_FILE
 
     trap_run_test
 }
@@ -103,12 +103,12 @@ function addon_must_gather() {
         echo "Running the GPU Add-on must-gather"
 
         addon_csv=$(oc get csv -n $ADDON_NAMESPACE -o custom-columns=NAME:.metadata.name --no-headers | grep nvidia-gpu-addon 2> /dev/null || true)
-        must_gather_image=$(oc get csv $addon_csv -n $ADDON_NAMESPACE -o jsonpath='{.spec.relatedImages[?(@.name == "must-gather")].image}' --ignore-not-found)
+        must_gather_image=$(oc get csv "$addon_csv" -n $ADDON_NAMESPACE -o jsonpath='{.spec.relatedImages[?(@.name == "must-gather")].image}' --ignore-not-found)
 
         tmp_dir="$(mktemp -d -t gpu-addon_XXXX)"
 
         if [[ ! "$must_gather_image" ]]; then
-            report_must_gather_junit 1 "Failed to find a GPU Add-on must-gather image" "$(($SECONDS - start ))s"
+            report_must_gather_junit 1 "Failed to find a GPU Add-on must-gather image" "$(($SECONDS - start))s"
             return
         fi
 
@@ -116,12 +116,12 @@ function addon_must_gather() {
         oc adm must-gather --image="$must_gather_image" --dest-dir="${tmp_dir}" &> /dev/null
 
         if [[ "$(ls "${tmp_dir}"/*/* 2>/dev/null | wc -l)" == 0 ]]; then
-            report_must_gather_junit 1 "GPU add-on must-gather image failed to must-gather anything" "$(($SECONDS - start ))s"
+            report_must_gather_junit 1 "GPU add-on must-gather image failed to must-gather anything" "$(($SECONDS - start))s"
             return
         fi
 
         img_dirname=$(dirname "$(ls "${tmp_dir}"/*/* | head -1)")
-        mv "$img_dirname"/* $tmp_dir
+        mv "$img_dirname"/* "$tmp_dir"
         rmdir "$img_dirname"
 
         expected_files=(
@@ -146,13 +146,13 @@ function addon_must_gather() {
 
         if [[ ${#missing_files[@]}  != 0 ]]; then
             missing_files_text=$(IFS=, ; echo "${missing_files[*]}")
-            report_must_gather_junit 1 "Not found or empty: $missing_files_text" "$(($SECONDS - start ))s"
+            report_must_gather_junit 1 "Not found or empty: $missing_files_text" "$(($SECONDS - start))s"
         else
-            report_must_gather_junit 0 "Success. Found all expected files. Must-gather image: $must_gather_image" "$(($SECONDS - start ))s"
+            report_must_gather_junit 0 "Success. Found all expected files. Must-gather image: $must_gather_image" "$(($SECONDS - start))s"
         fi
 
         echo "Copying add-on must-gather results to $ARTIFACT_EXTRA_LOGS_DIR ..."
-        cp -r "$tmp_dir"/* "$ARTIFACT_EXTRA_LOGS_DIR"
+        mv "$tmp_dir"/* "$ARTIFACT_EXTRA_LOGS_DIR"
 
         rmdir "$tmp_dir"
     }
@@ -182,7 +182,7 @@ function finalize_junit() {
     sed -i "s/TEST_TARGET_SHORT/${TARGET_SHORT}/g" "${JUNIT_FILE}"
     sed -i "s/TIMESTAMP/$(date -Is)/g" "${JUNIT_FILE}"
 
-    cat $OUTPUT_FILE >> $JUNIT_FILE
+    cat $OUTPUT_FILE >> "$JUNIT_FILE"
     cat >> "${JUNIT_FILE}" <<EOF
     $JUNIT_FOOTER_TEMPLATE
 EOF
@@ -205,8 +205,8 @@ function tar_artifacts() {
     TARBALL_TMP="${JUNIT_DIR}/ci-artifacts.tar.gz"
     TARBALL="${ARTIFACT_DIR}/ci-artifacts.tar.gz"
     echo "====== Archiving ci-artifacts..."
-    tar -czf ${TARBALL_TMP} ${ARTIFACT_DIR}
-    mv $TARBALL_TMP $TARBALL
+    tar -czf ${TARBALL_TMP} "${ARTIFACT_DIR}"
+    mv $TARBALL_TMP "$TARBALL"
     echo "====== Archive Done."
 }
 
@@ -224,7 +224,7 @@ echo "OCM_ENV=${OCM_ENV:-}"
 OCM_REFRESH_TOKEN=$(oc get secrets ci-secrets -n osde2e-ci-secrets -o json | jq -r '.data|.["ocm-token-refresh"]' | base64 -d)
 echo "OCM_REFRESH_TOKEN=$(echo ${OCM_REFRESH_TOKEN} | cut -c1-6)...."
 
-ocm login --token=${OCM_REFRESH_TOKEN} --url=${OCM_ENV}
+ocm login --token="${OCM_REFRESH_TOKEN}" --url="${OCM_ENV}"
 
 
 ################

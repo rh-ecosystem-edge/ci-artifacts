@@ -29,7 +29,7 @@ CONTAINER_FILE=./docker/bundle.Dockerfile
 
 CONTEXT_LOCATION="."
 
-CSV_FILE=bundle/manifests/gpu-operator.clusterserviceversion.yaml
+CSV_FILE=bundle/manifests/gpu-operator-certified.clusterserviceversion.yaml
 
 (echo "{ \"auths\": " ; cat /var/run/secrets/openshift.io/push/.dockercfg ; echo "}") > /tmp/.dockercfg_local
 LOCAL_AUTH="--tls-verify=false --authfile /tmp/.dockercfg_local"

@@ -63,7 +63,7 @@ function run_test() {
 $JUNIT_HEADER_TEMPLATE
 EOF
 
-    /usr/bin/time -o ${RUNTIME_FILE} ./run_toolbox.py "${TARGET}" > $OUTPUT_FILE
+    /usr/bin/time -o ${RUNTIME_FILE} ./run_toolbox.py ${TARGET} > $OUTPUT_FILE
 
     trap_run_test
 }

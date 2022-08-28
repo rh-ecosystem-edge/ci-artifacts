@@ -151,8 +151,8 @@ function addon_must_gather() {
             report_must_gather_junit 0 "Success. Found all expected files. Must-gather image: $must_gather_image" "$(($SECONDS - start))s"
         fi
 
-        echo "Copying add-on must-gather results to $ARTIFACT_EXTRA_LOGS_DIR ..."
-        mv "$tmp_dir"/* "$ARTIFACT_EXTRA_LOGS_DIR"
+        echo "Copying add-on must-gather results to ${ARTIFACT_DIR}..."
+        mv "$tmp_dir"/* "$ARTIFACT_DIR"
 
         rmdir "$tmp_dir"
     }
@@ -214,7 +214,6 @@ function tar_artifacts() {
 echo "====== Starting OSDE2E tests..."
 
 echo "Using ARTIFACT_DIR=$ARTIFACT_DIR."
-echo "Using ARTIFACT_EXTRA_LOGS_DIR=$ARTIFACT_EXTRA_LOGS_DIR"
 echo "Using JUNIT_DIR=$JUNIT_DIR"
 CLUSTER_ID=$(oc get secrets ci-secrets -n osde2e-ci-secrets -o json | jq -r '.data|.["CLUSTER_ID"]' | base64 -d)
 echo "CLUSTER_ID=${CLUSTER_ID:-}"

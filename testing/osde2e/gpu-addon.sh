@@ -43,13 +43,13 @@ function exit_and_abort() {
 
 function run_test() {
     TARGET=${1:-}
-    TARGET_SHORT=$(echo "$TARGET" | awk '{print $1"_"$2}')
+    TARGET_SHORT=$(echo $TARGET | awk '{print $1"_"$2}')
     echo "====== Running toolbox '$TARGET_SHORT'"
     # Make sure a new junit is generated for this run
     export FILE_POSTFIX=0
-    JUNIT_FILE_NAME=$(echo "$TARGET" | awk -v target="$TARGET_SHORT" '{print "junit_"target}')
+    JUNIT_FILE_NAME=$(echo $TARGET | awk -v target=$TARGET_SHORT '{print "junit_"target}')
     JUNIT_FILE="${JUNIT_DIR}/${JUNIT_FILE_NAME}_${FILE_POSTFIX}.xml"
-    while [ -f "$JUNIT_FILE" ]; do
+    while [ -f $JUNIT_FILE ]; do
         FILE_POSTFIX=$((FILE_POSTFIX + 1))
         JUNIT_FILE="${JUNIT_DIR}/${JUNIT_FILE_NAME}_${FILE_POSTFIX}.xml"
     done
@@ -59,7 +59,7 @@ function run_test() {
 
     trap trap_run_test EXIT
 
-    cat > "${JUNIT_FILE}" <<EOF
+    cat > ${JUNIT_FILE} <<EOF
 $JUNIT_HEADER_TEMPLATE
 EOF
 
@@ -182,7 +182,7 @@ function finalize_junit() {
     sed -i "s/TEST_TARGET_SHORT/${TARGET_SHORT}/g" "${JUNIT_FILE}"
     sed -i "s/TIMESTAMP/$(date -Is)/g" "${JUNIT_FILE}"
 
-    cat $OUTPUT_FILE >> "$JUNIT_FILE"
+    cat $OUTPUT_FILE >> $JUNIT_FILE
     cat >> "${JUNIT_FILE}" <<EOF
     $JUNIT_FOOTER_TEMPLATE
 EOF
@@ -205,8 +205,8 @@ function tar_artifacts() {
     TARBALL_TMP="${JUNIT_DIR}/ci-artifacts.tar.gz"
     TARBALL="${ARTIFACT_DIR}/ci-artifacts.tar.gz"
     echo "====== Archiving ci-artifacts..."
-    tar -czf ${TARBALL_TMP} "${ARTIFACT_DIR}"
-    mv $TARBALL_TMP "$TARBALL"
+    tar -czf ${TARBALL_TMP} ${ARTIFACT_DIR}
+    mv $TARBALL_TMP $TARBALL
     echo "====== Archive Done."
 }
 
@@ -223,7 +223,7 @@ echo "OCM_ENV=${OCM_ENV:-}"
 OCM_REFRESH_TOKEN=$(oc get secrets ci-secrets -n osde2e-ci-secrets -o json | jq -r '.data|.["ocm-token-refresh"]' | base64 -d)
 echo "OCM_REFRESH_TOKEN=$(echo ${OCM_REFRESH_TOKEN} | cut -c1-6)...."
 
-ocm login --token="${OCM_REFRESH_TOKEN}" --url="${OCM_ENV}"
+ocm login --token=${OCM_REFRESH_TOKEN} --url=${OCM_ENV}
 
 
 ################

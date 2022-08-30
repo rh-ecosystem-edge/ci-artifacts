@@ -97,69 +97,63 @@ function report_must_gather_junit() {
 }
 
 function addon_must_gather() {
-    run_in_sub_shell() {
 
-        start=$SECONDS
-        echo "Running the GPU Add-on must-gather"
+    start=$SECONDS
+    echo "Running the GPU Add-on must-gather"
 
-        addon_csv=$(oc get csv -n $ADDON_NAMESPACE -o custom-columns=NAME:.metadata.name --no-headers | grep nvidia-gpu-addon 2> /dev/null || true)
-        must_gather_image=$(oc get csv "$addon_csv" -n $ADDON_NAMESPACE -o jsonpath='{.spec.relatedImages[?(@.name == "must-gather")].image}' --ignore-not-found)
+    addon_csv=$(oc get csv -n $ADDON_NAMESPACE -o custom-columns=NAME:.metadata.name --no-headers | grep nvidia-gpu-addon 2> /dev/null || true)
+    addon_must_gather_image=$(oc get csv "$addon_csv" -n $ADDON_NAMESPACE -o jsonpath='{.spec.relatedImages[?(@.name == "must-gather")].image}' --ignore-not-found)
 
-        tmp_dir="$(mktemp -d -t gpu-addon_XXXX)"
+    tmp_dir="$(mktemp -d -t gpu-addon_XXXX)"
 
-        if [[ ! "$must_gather_image" ]]; then
-            report_must_gather_junit 1 "Failed to find a GPU Add-on must-gather image" "$(($SECONDS - start))s"
-            return
+    if [[ ! "$addon_must_gather_image" ]]; then
+        report_must_gather_junit 1 "Failed to find a GPU Add-on must-gather image" "$(($SECONDS - start))s"
+        return
+    fi
+
+    echo "Add-on must-gather image: $addon_must_gather_image"
+    oc adm must-gather --image="$addon_must_gather_image" --dest-dir="${tmp_dir}" &> /dev/null
+
+    if [[ "$(ls "${tmp_dir}"/*/* 2>/dev/null | wc -l)" == 0 ]]; then
+        report_must_gather_junit 1 "GPU add-on must-gather image failed to must-gather anything" "$(($SECONDS - start))s"
+        return
+    fi
+
+    img_dirname=$(dirname "$(ls "${tmp_dir}"/*/* | head -1)")
+    mv "$img_dirname"/* "$tmp_dir"
+    rmdir "$img_dirname"
+
+    expected_files=(
+        "cluster-scoped-resources/console.openshift.io/consoleplugins/"
+        "cluster-scoped-resources/operators.coreos.com/operators/"
+        "namespaces/redhat-nvidia-gpu-addon/monitoring.coreos.com/prometheuses/"
+        "namespaces/redhat-nvidia-gpu-addon/nfd.openshift.io/nodefeaturediscoveries/"
+        "namespaces/redhat-nvidia-gpu-addon/nvidia.addons.rh-ecosystem-edge.io/gpuaddons/"
+        "namespaces/redhat-nvidia-gpu-addon/operators.coreos.com/catalogsources/"
+        "namespaces/redhat-nvidia-gpu-addon/operators.coreos.com/subscriptions/"
+        "namespaces/redhat-nvidia-gpu-addon/pods/"
+        "namespaces/redhat-nvidia-gpu-addon/redhat-nvidia-gpu-addon.yaml"
+    )
+
+    missing_files=()
+    for file in "${expected_files[@]}"
+    do
+        if [[ "$(ls -1 "$tmp_dir/$file" 2>/dev/null | wc -l)" == 0 ]]; then
+            missing_files+=("$file")
         fi
+    done
 
-        echo "Add-on must-gather image: $must_gather_image"
-        oc adm must-gather --image="$must_gather_image" --dest-dir="${tmp_dir}" &> /dev/null
+    if [[ ${#missing_files[@]}  != 0 ]]; then
+        missing_files_text=$(IFS=, ; echo "${missing_files[*]}")
+        report_must_gather_junit 1 "Not found or empty: $missing_files_text" "$(($SECONDS - start))s"
+    else
+        report_must_gather_junit 0 "Success. Found all expected files. Must-gather image: $addon_must_gather_image" "$(($SECONDS - start))s"
+    fi
 
-        if [[ "$(ls "${tmp_dir}"/*/* 2>/dev/null | wc -l)" == 0 ]]; then
-            report_must_gather_junit 1 "GPU add-on must-gather image failed to must-gather anything" "$(($SECONDS - start))s"
-            return
-        fi
+    echo "Copying add-on must-gather results to ${ARTIFACT_DIR}..."
+    mv "$tmp_dir"/* "$ARTIFACT_DIR"
 
-        img_dirname=$(dirname "$(ls "${tmp_dir}"/*/* | head -1)")
-        mv "$img_dirname"/* "$tmp_dir"
-        rmdir "$img_dirname"
-
-        expected_files=(
-            "cluster-scoped-resources/console.openshift.io/consoleplugins/"
-            "cluster-scoped-resources/operators.coreos.com/operators/"
-            "namespaces/redhat-nvidia-gpu-addon/monitoring.coreos.com/prometheuses/"
-            "namespaces/redhat-nvidia-gpu-addon/nfd.openshift.io/nodefeaturediscoveries/"
-            "namespaces/redhat-nvidia-gpu-addon/nvidia.addons.rh-ecosystem-edge.io/gpuaddons/"
-            "namespaces/redhat-nvidia-gpu-addon/operators.coreos.com/catalogsources/"
-            "namespaces/redhat-nvidia-gpu-addon/operators.coreos.com/subscriptions/"
-            "namespaces/redhat-nvidia-gpu-addon/pods/"
-            "namespaces/redhat-nvidia-gpu-addon/redhat-nvidia-gpu-addon.yaml"
-        )
-
-        missing_files=()
-        for file in "${expected_files[@]}"
-        do
-            if [[ "$(ls -1 "$tmp_dir/$file" 2>/dev/null | wc -l)" == 0 ]]; then
-                missing_files+=("$file")
-            fi
-        done
-
-        if [[ ${#missing_files[@]}  != 0 ]]; then
-            missing_files_text=$(IFS=, ; echo "${missing_files[*]}")
-            report_must_gather_junit 1 "Not found or empty: $missing_files_text" "$(($SECONDS - start))s"
-        else
-            report_must_gather_junit 0 "Success. Found all expected files. Must-gather image: $must_gather_image" "$(($SECONDS - start))s"
-        fi
-
-        echo "Copying add-on must-gather results to ${ARTIFACT_DIR}..."
-        mv "$tmp_dir"/* "$ARTIFACT_DIR"
-
-        rmdir "$tmp_dir"
-    }
-
-    # run the function above in a subshell to avoid polluting the local `env`.
-    typeset -fx run_in_sub_shell
-    bash -c run_in_sub_shell
+    rmdir "$tmp_dir"
 }
 
 function finalize_junit() {

@@ -109,7 +109,7 @@ function addon_must_gather() {
     tmp_dir="$(mktemp -d -t gpu-addon_XXXX)"
 
     echo "Add-on must-gather image: $addon_must_gather_image"
-    oc adm must-gather --image="$addon_must_gather_image" --dest-dir="${tmp_dir}" &> /dev/null
+    oc adm must-gather --image="$addon_must_gather_image" --dest-dir="${tmp_dir}" || true
 
     if [[ "$(ls "${tmp_dir}"/*/* 2>/dev/null | wc -l)" == 0 ]]; then
         report_must_gather_junit 1 "GPU add-on must-gather image failed to must-gather anything" "$(($SECONDS - start))s"

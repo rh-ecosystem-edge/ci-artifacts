@@ -70,9 +70,6 @@ EOF
 
 function trap_run_test() {
     finalize_junit
-    must_gather
-    addon_must_gather
-    tar_artifacts
 }
 
 function must_gather() {
@@ -101,15 +98,15 @@ function addon_must_gather() {
     start=$SECONDS
     echo "Running the GPU Add-on must-gather"
 
-    addon_csv=$(oc get csv -n $ADDON_NAMESPACE -o custom-columns=NAME:.metadata.name --no-headers | grep nvidia-gpu-addon 2> /dev/null || true)
-    addon_must_gather_image=$(oc get csv "$addon_csv" -n $ADDON_NAMESPACE -o jsonpath='{.spec.relatedImages[?(@.name == "must-gather")].image}' --ignore-not-found)
-
-    tmp_dir="$(mktemp -d -t gpu-addon_XXXX)"
+    addon_csv=$(oc get csv -n $ADDON_NAMESPACE -o name | grep nvidia-gpu-addon || true)
+    addon_must_gather_image=$(oc get "$addon_csv" -n $ADDON_NAMESPACE -o jsonpath='{.spec.relatedImages[?(@.name == "must-gather")].image}' --ignore-not-found || true)
 
     if [[ ! "$addon_must_gather_image" ]]; then
         report_must_gather_junit 1 "Failed to find a GPU Add-on must-gather image" "$(($SECONDS - start))s"
         return
     fi
+
+    tmp_dir="$(mktemp -d -t gpu-addon_XXXX)"
 
     echo "Add-on must-gather image: $addon_must_gather_image"
     oc adm must-gather --image="$addon_must_gather_image" --dest-dir="${tmp_dir}" &> /dev/null

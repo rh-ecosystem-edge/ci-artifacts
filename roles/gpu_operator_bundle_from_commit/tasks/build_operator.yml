@@ -34,6 +34,9 @@
   - name: Delete the operator image builder pod, if any
     command: oc delete -f "{{ artifact_extra_logs_dir }}/operator-image-builder-pod.yml" --ignore-not-found=true
 
+  - name: Name the namespace privileged
+    command: oc adm policy add-scc-to-user privileged -z default -n gpu-operator-ci
+
   - name: Apply the operator image builder pod manifest
     command:
       oc apply -f "{{ artifact_extra_logs_dir }}/operator-image-builder-pod.yml"

@@ -25,6 +25,9 @@
   command:
     oc create namespace {{ gpu_operator_operator_namespace }}
 
+- name: Name the namespace privileged
+  command: oc adm policy add-scc-to-user privileged -z default -n {{ gpu_operator_operator_namespace }}
+
 - name: Deploy the GPU Operator from the bundle
   command:
     operator-sdk run bundle --timeout=5m

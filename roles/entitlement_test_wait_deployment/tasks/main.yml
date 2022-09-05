@@ -15,6 +15,14 @@
       set -o errexit;
       set -o pipefail;
 
+      oc create namespace  entitlement-tester --dry-run=client -o yaml | oc apply -f -
+      oc label namespace entitlement-tester \
+        security.openshift.io/scc.podSecurityLabelSync=false \
+        pod-security.kubernetes.io/enforce=privileged \
+        pod-security.kubernetes.io/audit=privileged \
+        pod-security.kubernetes.io/warn=privileged \
+        --overwrite
+
       oc apply -f "{{ entitlement_tester_entrypoint }}"
       oc delete -f "{{ entitlement_tester_pod }}" --ignore-not-found=true;
       oc create -f "{{ entitlement_tester_pod }}";
@@ -23,7 +31,7 @@
       CMD="oc get pod/entitlement-tester
                 -o custom-columns=:.status.phase
                 --no-headers
-                -n default
+                -n entitlement-tester
                 ";
       while true; do
           state=$($CMD)
@@ -57,7 +65,7 @@
 
   - name: Store the description of the test Pod (debug)
     shell:
-      oc describe pod/entitlement-tester -n default
+      oc describe pod/entitlement-tester -n entitlement-tester
          > {{ artifact_extra_logs_dir }}/entitlement-test.pod.descr
     failed_when: false
 
@@ -67,12 +75,12 @@
   always:
   - name: Store the test Pod logs (debug)
     shell:
-      oc logs pod/entitlement-tester -n default
+      oc logs pod/entitlement-tester -n entitlement-tester
          > {{ artifact_extra_logs_dir }}/entitlement-test.pod.log
     failed_when: false
 
   - name: Show the test Pod logs (debug)
-    command: oc logs pod/entitlement-tester -n default
+    command: oc logs pod/entitlement-tester -n entitlement-tester
     when: _entitlement_testwait_called_from_inspect == "yes" or entitlement_wait.rc != 0
     failed_when: false
 

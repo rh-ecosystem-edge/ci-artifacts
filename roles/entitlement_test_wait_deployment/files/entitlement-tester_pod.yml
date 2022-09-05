@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Pod
 metadata:
  name: entitlement-tester
- namespace: default
+ namespace: entitlement-tester
 spec:
   containers:
   - name: entitlement-tester

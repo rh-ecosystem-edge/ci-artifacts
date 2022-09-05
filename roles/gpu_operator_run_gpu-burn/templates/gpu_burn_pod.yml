@@ -4,7 +4,7 @@ metadata:
   labels:
     app: gpu-burn
   name: gpu-burn-{{ gpu_node_name }}
-  namespace: default
+  namespace: gpu-burn
 spec:
   restartPolicy: Never
   # force the name of the node in which this pod should run

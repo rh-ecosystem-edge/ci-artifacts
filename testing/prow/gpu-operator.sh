@@ -258,7 +258,10 @@ test_master_branch() {
     #./run_toolbox.py gpu_operator deploy_from_bundle --bundle=master
 
     # meanwhile:
-    deploy_commit "https://gitlab.com/nvidia/kubernetes/gpu-operator.git" "master"
+    #deploy_commit "https://gitlab.com/nvidia/kubernetes/gpu-operator.git" "master"
+    NVIDIA_LATEST_MASTER_BUNDLE="registry.gitlab.com/nvidia/kubernetes/gpu-operator/staging/gpu-operator-bundle:master-latest"
+    OPERATOR_NAMESPACE="nvidia-gpu-operator"
+    ./run_toolbox.py gpu_operator deploy_from_bundle --bundle "${NVIDIA_LATEST_MASTER_BUNDLE}" --namespace "${OPERATOR_NAMESPACE}"
 
     prepare_cluster_for_gpu_operator_with_alerts "$@"
 

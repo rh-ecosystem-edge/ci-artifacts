@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: entitlement-tester-entrypoint
-  namespace: default
+  namespace: entitlement-tester
 data:
   entrypoint.sh: |-
     #!/bin/bash

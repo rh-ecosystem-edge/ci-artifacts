@@ -198,11 +198,6 @@
     command:
       oc create -f "{{ artifact_extra_logs_dir }}/000_namespace.yml"
 
-  - name: Mark the namespace for monitoring, if requested
-    when: cluster_deploy_operator_namespace_monitoring | bool
-    command:
-      oc label ns/{{ cluster_deploy_operator_namespace }} openshift.io/cluster-monitoring=true
-
 - name: Create the OperatorGroup for deploying in a dedicated namespace
   when: not cluster_deploy_operator_all_namespaces | bool
   block:

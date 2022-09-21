@@ -18,12 +18,22 @@
   register: gpu_burn_gpu_nodes
   failed_when: gpu_burn_gpu_nodes.stdout == ""
 
+- name: Create the gpu-burn namespace and label it as privileged
+  shell: |
+    oc create namespace gpu-burn --dry-run=client -o yaml | oc apply -f -
+    oc label namespace gpu-burn \
+      security.openshift.io/scc.podSecurityLabelSync=false \
+      pod-security.kubernetes.io/enforce=privileged \
+      pod-security.kubernetes.io/audit=privileged \
+      pod-security.kubernetes.io/warn=privileged \
+      --overwrite
+
 # Store the configmap into a file, for easy reproduction from artifacts
 - name: Create the entrypoint ConfigMap file
   shell:
     oc create configmap gpu-burn-entrypoint
        --from-file=entrypoint.sh={{ gpu_burn_entrypoint }}
-       -n default
+       -n gpu-burn
        --dry-run=client
        -oyaml
        > {{ artifact_extra_logs_dir }}/000_configmap_gpu-burn_entrypoint.yml
@@ -37,7 +47,7 @@
   shell:
     oc create configmap gpu-burn-src
        --from-file={{ gpu_burn_src_dir }}
-       -n default
+       -n gpu-burn
        --dry-run=client
        -oyaml
        > {{ artifact_extra_logs_dir }}/000_configmap_gpu-burn_src.yml
@@ -46,7 +56,7 @@
   command: oc apply -f {{ artifact_extra_logs_dir }}/000_configmap_gpu-burn_src.yml
 
 - name: Delete possibly stalled GPU burn Pods
-  command: oc --ignore-not-found=true delete pod/gpu-burn-{{ item }} -n default
+  command: oc --ignore-not-found=true delete pod/gpu-burn-{{ item }} -n gpu-burn
   with_items: "{{ gpu_burn_gpu_nodes.stdout_lines }}"
   failed_when: false
 
@@ -74,7 +84,7 @@
     loop: "{{ gpu_burn_gpu_nodes.stdout_lines }}"
     command:
       oc get pod/gpu-burn-{{ item }}
-         -n default
+         -n gpu-burn
          -o custom-columns=:.status.phase
          --no-headers
     register: gpu_burn_wait
@@ -86,35 +96,35 @@
   - name: Ensure that no GPU was faulty
     loop: "{{ gpu_burn_gpu_nodes.stdout_lines }}"
     shell:
-      oc logs pod/gpu-burn-{{ item }} -n default | grep FAULTY
+      oc logs pod/gpu-burn-{{ item }} -n gpu-burn | grep FAULTY
     register: gpu_burn_test_faulty
     failed_when: gpu_burn_test_faulty.rc == 0
 
   always:
   - name: Save the logs of the GPU burn Pods
-    shell: oc logs pod/gpu-burn-{{ item }} -n default | grep -o "[^$(printf '\r')]*$"
+    shell: oc logs pod/gpu-burn-{{ item }} -n gpu-burn | grep -o "[^$(printf '\r')]*$"
     with_items: "{{ gpu_burn_gpu_nodes.stdout_lines }}"
     failed_when: false
 
   - name: Save the description of the GPU burn Pods
-    shell: oc describe pod/gpu-burn-{{ item }} -n default > {{ artifact_extra_logs_dir }}/gpu_burn.{{ item }}.description.txt
+    shell: oc describe pod/gpu-burn-{{ item }} -n gpu-burn > {{ artifact_extra_logs_dir }}/gpu_burn.{{ item }}.description.txt
     with_items: "{{ gpu_burn_gpu_nodes.stdout_lines }}"
     failed_when: false
 
   - name: Save the full logs of the GPU burn Pods
-    shell: oc logs pod/gpu-burn-{{ item }} -n default > {{ artifact_extra_logs_dir }}/gpu_burn.{{ item }}.log
+    shell: oc logs pod/gpu-burn-{{ item }} -n gpu-burn > {{ artifact_extra_logs_dir }}/gpu_burn.{{ item }}.log
     with_items: "{{ gpu_burn_gpu_nodes.stdout_lines }}"
     failed_when: false
 
   - name: Cleanup the GPU burn Pods
-    command: oc --ignore-not-found=true delete pod/gpu-burn-{{ item }} -n default
+    command: oc --ignore-not-found=true delete pod/gpu-burn-{{ item }} -n gpu-burn
     with_items: "{{ gpu_burn_gpu_nodes.stdout_lines }}"
     failed_when: false
 
   - name: Delete the entrypoint ConfigMap
-    command: oc --ignore-not-found=true delete configmap gpu-burn-entrypoint -n default
+    command: oc --ignore-not-found=true delete configmap gpu-burn-entrypoint -n gpu-burn
     failed_when: false
 
   - name: Delete the src ConfigMap
-    command: oc --ignore-not-found=true delete configmap src -n default
+    command: oc --ignore-not-found=true delete configmap src -n gpu-burn
     failed_when: false

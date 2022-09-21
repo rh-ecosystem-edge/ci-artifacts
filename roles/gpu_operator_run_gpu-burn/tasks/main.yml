@@ -18,15 +18,10 @@
   register: gpu_burn_gpu_nodes
   failed_when: gpu_burn_gpu_nodes.stdout == ""
 
+
 - name: Create the gpu-burn namespace and label it as privileged
-  shell: |
-    oc create namespace gpu-burn --dry-run=client -o yaml | oc apply -f -
-    oc label namespace gpu-burn \
-      security.openshift.io/scc.podSecurityLabelSync=false \
-      pod-security.kubernetes.io/enforce=privileged \
-      pod-security.kubernetes.io/audit=privileged \
-      pod-security.kubernetes.io/warn=privileged \
-      --overwrite
+  shell:
+    oc create namespace gpu-burn
 
 # Store the configmap into a file, for easy reproduction from artifacts
 - name: Create the entrypoint ConfigMap file
@@ -41,19 +36,6 @@
 - name: Create the entrypoint ConfigMap resource
   command:
     oc apply -f {{ artifact_extra_logs_dir }}/000_configmap_gpu-burn_entrypoint.yml
-
-# Store the configmap into a file, for easy reproduction from artifacts
-- name: Create the src ConfigMap file
-  shell:
-    oc create configmap gpu-burn-src
-       --from-file={{ gpu_burn_src_dir }}
-       -n gpu-burn
-       --dry-run=client
-       -oyaml
-       > {{ artifact_extra_logs_dir }}/000_configmap_gpu-burn_src.yml
-
-- name: Create the src ConfigMap resource
-  command: oc apply -f {{ artifact_extra_logs_dir }}/000_configmap_gpu-burn_src.yml
 
 - name: Delete possibly stalled GPU burn Pods
   command: oc --ignore-not-found=true delete pod/gpu-burn-{{ item }} -n gpu-burn
@@ -123,8 +105,4 @@
 
   - name: Delete the entrypoint ConfigMap
     command: oc --ignore-not-found=true delete configmap gpu-burn-entrypoint -n gpu-burn
-    failed_when: false
-
-  - name: Delete the src ConfigMap
-    command: oc --ignore-not-found=true delete configmap src -n gpu-burn
     failed_when: false

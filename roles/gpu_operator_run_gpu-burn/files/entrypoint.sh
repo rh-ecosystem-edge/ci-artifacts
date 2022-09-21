@@ -6,10 +6,8 @@ set -o nounset
 
 set -x
 
-cp /gpu-burn-src/* .
-
-make
+cd /usr/local/bin
 
 echo ""
 echo "Running GPU Burn for ${GPU_BURN_TIME} seconds."
-time ./gpu_burn $GPU_BURN_TIME
+time ./gpu_burn "${GPU_BURN_TIME}"

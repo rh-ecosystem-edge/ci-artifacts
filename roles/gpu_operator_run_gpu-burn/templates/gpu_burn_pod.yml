@@ -9,9 +9,19 @@ spec:
   restartPolicy: Never
   # force the name of the node in which this pod should run
   nodeName: "{{ gpu_node_name }}"
+  securityContext:
+    runAsNonRoot: true
   containers:
-  - image: nvcr.io/nvidia/cuda:11.2.2-devel-ubi8
+  - image: quay.io/edge-infrastructure/gpu-burn:latest
     imagePullPolicy: Always
+    securityContext:
+      runAsUser: 1001
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+        - ALL
+      seccompProfile:
+        type: "RuntimeDefault"
     name: gpu-burn-ctr
     command:
     - /bin/entrypoint.sh
@@ -20,9 +30,6 @@ spec:
       mountPath: /bin/entrypoint.sh
       readOnly: true
       subPath: entrypoint.sh
-    - name: src
-      mountPath: /gpu-burn-src
-      readOnly: true
     env:
     - name: GPU_BURN_TIME
       value: "{{ gpu_burn_time }}"
@@ -33,9 +40,5 @@ spec:
   volumes:
   - name: entrypoint
     configMap:
-      defaultMode: 0700
+      defaultMode: 0755
       name: gpu-burn-entrypoint
-  - name: src
-    configMap:
-      defaultMode: 0700
-      name: gpu-burn-src

@@ -19,7 +19,7 @@
   shell: |
     set -e;
     set -o pipefail;
-    curl -s -k -H "Authorization: Bearer $(oc -n openshift-monitoring sa new-token prometheus-k8s)" https://{{ alert_manager_route_cmd.stdout }}/api/v1/alerts \
+    curl -s -k -H "Authorization: Bearer $(oc create token prometheus-k8s -n openshift-monitoring)" https://{{ alert_manager_route_cmd.stdout }}/api/v1/alerts \
        | jq . > "{{ alert_filename }}"; \
     grep -q '"alertname": "{{ cluster_wait_for_alert_name }}"' "{{ alert_filename }}" # could be improved with 'jq' and a stronger json inspection ...
   register: wait_for_alert

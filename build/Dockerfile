@@ -22,7 +22,7 @@ RUN yum install -y \
 
 
 # Install dependencies: `oc`
-ARG OCP_CLI_VERSION=latest
+ARG OCP_CLI_VERSION=4.11.12
 ARG OCP_CLI_URL=https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/${OCP_CLI_VERSION}/openshift-client-linux.tar.gz
 RUN curl -L ${OCP_CLI_URL} | tar xfz - -C /usr/local/bin oc
 
